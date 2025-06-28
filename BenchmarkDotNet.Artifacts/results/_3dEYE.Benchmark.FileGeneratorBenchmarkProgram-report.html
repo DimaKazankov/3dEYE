@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>_3dEYE.Benchmark.FileGeneratorBenchmarkProgram-20250628-214416</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.2, Linux Manjaro Linux
+Intel Core i7-6820HQ CPU 2.70GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
+.NET SDK 9.0.105
+  [Host]     : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+  DefaultJob : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method     </th><th>Mean </th><th>Error</th><th>StdDev</th><th>Median</th><th>Gen0  </th><th>Gen1</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Generate1GBFile</td><td>11,988.6 ms</td><td>777.03 ms</td><td>2,291.09 ms</td><td>10,493.3 ms</td><td>1502000.0000</td><td>1000.0000</td><td>5992.26 MB</td>
+</tr><tr><td>Generate100MBFile</td><td>1,348.2 ms</td><td>108.41 ms</td><td>317.96 ms</td><td>1,368.7 ms</td><td>146000.0000</td><td>-</td><td>585.49 MB</td>
+</tr><tr><td>Generate10MBFile</td><td>168.5 ms</td><td>8.61 ms</td><td>24.69 ms</td><td>164.4 ms</td><td>14000.0000</td><td>-</td><td>58.83 MB</td>
+</tr></tbody></table>
+</body>
+</html>
