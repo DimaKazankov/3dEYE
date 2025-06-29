@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
+using _3dEYE.Helpers;
 
 namespace _3dEYE.Generator.Algorithms;
 
@@ -10,10 +11,6 @@ public class ParallelFileGenerator : IFileGenerator
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
     private readonly char[] _lineBuffer;
-    
-    // Static readonly constants to avoid repeated allocations
-    private static readonly string Separator = ". ";
-    private static readonly string NewLine = Environment.NewLine;
 
     public ParallelFileGenerator(ILogger logger, string[] input, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
     {
@@ -28,7 +25,7 @@ public class ParallelFileGenerator : IFileGenerator
         _input = input;
         _chunkSize = chunkSize;
         _maxDegreeOfParallelism = maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
-        _lineBuffer = new char[256]; // Reusable buffer for line formatting
+        _lineBuffer = new char[256];
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -38,20 +35,18 @@ public class ParallelFileGenerator : IFileGenerator
         if (fileSizeInBytes <= 0)
             throw new ArgumentException($"File size must be greater than 0, but was: {fileSizeInBytes}");
 
-        PrepareDirectory(filePath);
+        FileGeneratorHelpers.PrepareDirectory(filePath, _logger);
         _logger.LogInformation("Starting parallel file generation. Target: {FilePath}, Size: {FileSize} bytes, Chunks: {ChunkSize}, Parallelism: {Parallelism}", 
             filePath, fileSizeInBytes, _chunkSize, _maxDegreeOfParallelism);
 
         var tempFiles = new List<string>();
         try
         {
-            // Calculate number of chunks needed
             var numberOfChunks = (int)Math.Ceiling((double)fileSizeInBytes / _chunkSize);
             _logger.LogInformation("Generating {NumberOfChunks} chunks in parallel...", numberOfChunks);
 
-            // Generate chunks in parallel
             var chunkTasks = new List<Task<string>>();
-            for (int i = 0; i < numberOfChunks; i++)
+            for (var i = 0; i < numberOfChunks; i++)
             {
                 var chunkIndex = i;
                 var chunkStartOffset = i * _chunkSize;
@@ -68,15 +63,12 @@ public class ParallelFileGenerator : IFileGenerator
                 chunkTasks.Add(task);
             }
 
-            // Wait for all chunks to complete
             var tempFilePaths = await Task.WhenAll(chunkTasks).ConfigureAwait(false);
             tempFiles.AddRange(tempFilePaths);
 
             _logger.LogInformation("All chunks generated. Merging files...");
 
-            // Merge chunks using memory-mapped files for optimal performance
             await MergeChunksAsync(filePath, tempFilePaths, fileSizeInBytes).ConfigureAwait(false);
-
             _logger.LogInformation("Parallel file generation completed successfully. Final size: {FileSize} bytes", fileSizeInBytes);
         }
         catch (Exception ex)
@@ -86,7 +78,6 @@ public class ParallelFileGenerator : IFileGenerator
         }
         finally
         {
-            // Cleanup temp files
             await CleanupTempFilesAsync(tempFiles).ConfigureAwait(false);
         }
     }
@@ -101,15 +92,10 @@ public class ParallelFileGenerator : IFileGenerator
 
         while (currentSize < chunkSize)
         {
-            var number = Random.Shared.Next(1, 1000000) + (int)(globalOffset / 50); // Ensure unique numbering across chunks
-            var str = _input[Random.Shared.Next(_input.Length)];
-            
-            // Use reusable buffer for zero-allocation formatting
-            var lineLength = FormatLine(_lineBuffer, number, str);
-            var line = new string(_lineBuffer, 0, lineLength);
+            var line = FileGeneratorHelpers.GenerateRandomLine(_input, _lineBuffer, globalOffset);
             
             await writer.WriteLineAsync(line).ConfigureAwait(false);
-            currentSize += Encoding.UTF8.GetByteCount(line) + Encoding.UTF8.GetByteCount(NewLine);
+            currentSize += FileGeneratorHelpers.CalculateLineByteCount(line);
 
             if (currentSize >= chunkSize)
                 break;
@@ -119,32 +105,11 @@ public class ParallelFileGenerator : IFileGenerator
         return tempFilePath;
     }
 
-    private static int FormatLine(Span<char> buffer, int number, string str)
-    {
-        var numberStr = number.ToString();
-        
-        // Copy number
-        numberStr.CopyTo(buffer);
-        var currentPos = numberStr.Length;
-        
-        // Copy separator (using static readonly)
-        Separator.CopyTo(buffer.Slice(currentPos));
-        currentPos += Separator.Length;
-        
-        // Copy string
-        str.CopyTo(buffer.Slice(currentPos));
-        currentPos += str.Length;
-        
-        return currentPos;
-    }
-
     private async Task MergeChunksAsync(string finalFilePath, string[] tempFilePaths, long totalSize)
     {
-        // Create the final file with the exact size
         await using var finalFileStream = new FileStream(finalFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, FileOptions.Asynchronous);
         finalFileStream.SetLength(totalSize);
 
-        // Calculate chunk positions for parallel merging
         var chunkPositions = new List<(string filePath, long offset, long size)>();
         long currentOffset = 0;
 
@@ -159,10 +124,8 @@ public class ParallelFileGenerator : IFileGenerator
             currentOffset += chunkSize;
         }
 
-        // Sort chunks by offset to minimize disk head movement
         chunkPositions.Sort((a, b) => a.offset.CompareTo(b.offset));
 
-        // Merge chunks sequentially but with parallel processing of each chunk
         foreach (var chunkInfo in chunkPositions)
         {
             await MergeChunkToPositionAsync(finalFileStream, chunkInfo.filePath, chunkInfo.offset, chunkInfo.size).ConfigureAwait(false);
@@ -175,7 +138,6 @@ public class ParallelFileGenerator : IFileGenerator
         
         finalFileStream.Seek(offset, SeekOrigin.Begin);
         
-        // Copy chunk data to the correct position in final file
         var buffer = new byte[64 * 1024]; // 64KB buffer
         int bytesRead;
         long totalBytesRead = 0;
@@ -214,18 +176,5 @@ public class ParallelFileGenerator : IFileGenerator
         });
 
         await Task.WhenAll(cleanupTasks).ConfigureAwait(false);
-    }
-
-    private void PrepareDirectory(string filePath)
-    {
-        var directory = Path.GetDirectoryName(filePath);
-        if (string.IsNullOrEmpty(directory))
-            throw new ArgumentException("File path must include a directory");
-
-        if (Directory.Exists(directory))
-            return;
-
-        _logger.LogInformation("Directory doesn't exist. Creating directory: {Directory}", directory);
-        Directory.CreateDirectory(directory);
     }
 } 

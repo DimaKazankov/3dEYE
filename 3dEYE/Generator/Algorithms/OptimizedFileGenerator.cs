@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
+using _3dEYE.Helpers;
 
 namespace _3dEYE.Generator.Algorithms;
 
@@ -10,10 +11,6 @@ public class OptimizedFileGenerator : IFileGenerator
     private readonly int _bufferSize;
     private readonly int _batchSize;
     private readonly char[] _lineBuffer;
-    
-    // Static readonly constants to avoid repeated allocations
-    private static readonly string Separator = ". ";
-    private static readonly string NewLine = Environment.NewLine;
 
     public OptimizedFileGenerator(ILogger logger, string[] input, int bufferSize = 1024 * 1024, int batchSize = 1000)
     {
@@ -30,7 +27,7 @@ public class OptimizedFileGenerator : IFileGenerator
         _input = input;
         _bufferSize = bufferSize;
         _batchSize = batchSize;
-        _lineBuffer = new char[512]; // Reusable buffer for line formatting
+        _lineBuffer = new char[512];
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -40,7 +37,7 @@ public class OptimizedFileGenerator : IFileGenerator
         if (fileSizeInBytes <= 0)
             throw new ArgumentException($"File size must be greater than 0, but was: {fileSizeInBytes}");
 
-        PrepareDirectory(filePath);
+        FileGeneratorHelpers.PrepareDirectory(filePath, _logger);
         _logger.LogInformation("Starting optimized file generation. Target: {FilePath}, Size: {FileSize} bytes, Buffer: {BufferSize} bytes", 
             filePath, fileSizeInBytes, _bufferSize);
 
@@ -49,7 +46,6 @@ public class OptimizedFileGenerator : IFileGenerator
             long currentSize = 0;
             var batchCount = 0;
 
-            // Use FileStream with larger buffer for better I/O performance
             await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, _bufferSize, FileOptions.Asynchronous);
             await using var writer = new StreamWriter(fileStream, Encoding.UTF8, _bufferSize, leaveOpen: false);
 
@@ -57,14 +53,13 @@ public class OptimizedFileGenerator : IFileGenerator
 
             while (currentSize < fileSizeInBytes)
             {
-                // Process in batches to reduce GC pressure
                 var batch = GenerateBatch(fileSizeInBytes - currentSize);
                 
                 foreach (var line in batch)
                 {
                     var lineString = line.ToString();
                     await writer.WriteLineAsync(lineString).ConfigureAwait(false);
-                    currentSize += Encoding.UTF8.GetByteCount(lineString) + Encoding.UTF8.GetByteCount(NewLine);
+                    currentSize += FileGeneratorHelpers.CalculateLineByteCount(lineString);
                     
                     if (currentSize >= fileSizeInBytes)
                         break;
@@ -72,7 +67,6 @@ public class OptimizedFileGenerator : IFileGenerator
 
                 batchCount++;
 
-                // Force garbage collection periodically for very large files
                 if (fileSizeInBytes > 10L * 1024L * 1024L * 1024L && batchCount % 1000 == 0) // 10GB+
                 {
                     GC.Collect();
@@ -96,54 +90,20 @@ public class OptimizedFileGenerator : IFileGenerator
     private IEnumerable<ReadOnlyMemory<char>> GenerateBatch(long remainingBytes)
     {
         var batch = new List<ReadOnlyMemory<char>>();
-        var estimatedBytesPerLine = 50L; // Use long to avoid overflow
+        const long estimatedBytesPerLine = 50L; 
         
-        // For very small remaining bytes, generate at least one line
         var maxLinesInBatch = Math.Max(1, Math.Min(_batchSize, (int)Math.Min(remainingBytes / estimatedBytesPerLine, int.MaxValue)));
 
-        for (int i = 0; i < maxLinesInBatch; i++)
+        for (var i = 0; i < maxLinesInBatch; i++)
         {
             var number = Random.Shared.Next(1, 1000000);
             var str = _input[Random.Shared.Next(_input.Length)];
             
-            // Use reusable buffer for zero-allocation formatting
-            var lineLength = FormatLine(_lineBuffer, number, str);
+            var lineLength = FileGeneratorHelpers.FormatLine(_lineBuffer, number, str);
             var lineMemory = new ReadOnlyMemory<char>(_lineBuffer, 0, lineLength);
             batch.Add(lineMemory);
         }
 
         return batch;
-    }
-
-    private static int FormatLine(Span<char> buffer, int number, string str)
-    {
-        var numberStr = number.ToString();
-        
-        // Copy number
-        numberStr.CopyTo(buffer);
-        var currentPos = numberStr.Length;
-        
-        // Copy separator (using static readonly)
-        Separator.CopyTo(buffer.Slice(currentPos));
-        currentPos += Separator.Length;
-        
-        // Copy string
-        str.CopyTo(buffer.Slice(currentPos));
-        currentPos += str.Length;
-        
-        return currentPos;
-    }
-
-    private void PrepareDirectory(string filePath)
-    {
-        var directory = Path.GetDirectoryName(filePath);
-        if (string.IsNullOrEmpty(directory))
-            throw new ArgumentException("File path must include a directory");
-
-        if (Directory.Exists(directory))
-            return;
-
-        _logger.LogInformation("Directory doesn't exist. Creating directory: {Directory}", directory);
-        Directory.CreateDirectory(directory);
     }
 } 

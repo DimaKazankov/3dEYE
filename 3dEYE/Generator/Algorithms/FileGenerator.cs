@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Logging;
+using _3dEYE.Helpers;
 
 namespace _3dEYE.Generator.Algorithms;
 
@@ -8,9 +9,6 @@ public class FileGenerator : IFileGenerator
     private readonly ILogger _logger;
     private readonly string[] _input;
     private readonly char[] _lineBuffer;
-
-    private const string Separator = ". ";
-    private static readonly string NewLine = Environment.NewLine;
 
     public FileGenerator(ILogger logger, string[] input)
     {
@@ -31,7 +29,7 @@ public class FileGenerator : IFileGenerator
         if (fileSizeInBytes <= 0)
             throw new ArgumentException($"File size must be greater than 0, but was: {fileSizeInBytes}");
 
-        PrepareDirectory(filePath);
+        FileGeneratorHelpers.PrepareDirectory(filePath, _logger);
         _logger.LogInformation("Starting file generation process. Target file: {FilePath}, Size: {FileSize} bytes", filePath, fileSizeInBytes);
 
         try
@@ -43,14 +41,10 @@ public class FileGenerator : IFileGenerator
 
             while (currentSize < fileSizeInBytes)
             {
-                var number = Random.Shared.Next(1, 1000000);
-                var str = _input[Random.Shared.Next(_input.Length)];
-                
-                var lineLength = FormatLine(_lineBuffer, number, str);
-                var line = new string(_lineBuffer, 0, lineLength);
+                var line = FileGeneratorHelpers.GenerateRandomLine(_input, _lineBuffer);
                 
                 await writer.WriteLineAsync(line).ConfigureAwait(false);
-                currentSize += Encoding.UTF8.GetByteCount(line) + Encoding.UTF8.GetByteCount(NewLine);
+                currentSize += FileGeneratorHelpers.CalculateLineByteCount(line);
             }
 
             _logger.LogInformation("File generation completed successfully. Final size: {FinalSize} bytes", currentSize);
@@ -60,34 +54,5 @@ public class FileGenerator : IFileGenerator
             _logger.LogError(ex, "Error occurred during file generation: {FilePath}", filePath);
             throw;
         }
-    }
-
-    private static int FormatLine(Span<char> buffer, int number, string str)
-    {
-        var numberStr = number.ToString();
-        
-        numberStr.CopyTo(buffer);
-        var currentPos = numberStr.Length;
-        
-        Separator.CopyTo(buffer.Slice(currentPos));
-        currentPos += Separator.Length;
-        
-        str.CopyTo(buffer.Slice(currentPos));
-        currentPos += str.Length;
-        
-        return currentPos;
-    }
-
-    private void PrepareDirectory(string filePath)
-    {
-        var directory = Path.GetDirectoryName(filePath);
-        if (string.IsNullOrEmpty(directory))
-            throw new ArgumentException("File path must include a directory");
-
-        if (Directory.Exists(directory))
-            return;
-
-        _logger.LogInformation("Directory doesn't exist. Creating directory: {Directory}", directory);
-        Directory.CreateDirectory(directory);
     }
 }
