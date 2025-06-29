@@ -8,6 +8,7 @@ public class ParallelFileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
     private readonly string[] _input;
+    private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
     private readonly char[] _lineBuffer;
@@ -23,6 +24,7 @@ public class ParallelFileGenerator : IFileGenerator
         
         _logger = logger;
         _input = input;
+        _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _chunkSize = chunkSize;
         _maxDegreeOfParallelism = maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
         _lineBuffer = new char[256];
@@ -92,10 +94,10 @@ public class ParallelFileGenerator : IFileGenerator
 
         while (currentSize < chunkSize)
         {
-            var line = FileGeneratorHelpers.GenerateRandomLine(_input, _lineBuffer, globalOffset);
+            var lineMemory = FileGeneratorHelpers.GenerateRandomLineAsMemory(_inputMemory, _lineBuffer, globalOffset);
             
-            await writer.WriteLineAsync(line).ConfigureAwait(false);
-            currentSize += FileGeneratorHelpers.CalculateLineByteCount(line);
+            await writer.WriteLineAsync(lineMemory).ConfigureAwait(false);
+            currentSize += FileGeneratorHelpers.CalculateLineByteCount(lineMemory);
 
             if (currentSize >= chunkSize)
                 break;

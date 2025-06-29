@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>_3dEYE.Benchmark.FileGeneratorBenchmarks-20250629-084443</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.2, Linux Manjaro Linux
+Intel Core i7-6820HQ CPU 2.70GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
+.NET SDK 9.0.105
+  [Host]     : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+  DefaultJob : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method                 </th><th>Mean </th><th>Error</th><th>StdDev</th><th>Median</th><th>Gen0 </th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Original_Generate1GBFile</td><td>5,797.23 ms</td><td>277.151 ms</td><td>817.187 ms</td><td>5,504.26 ms</td><td>325000.0000</td><td>-</td><td>-</td><td>1298.62 MB</td>
+</tr><tr><td>Optimized_Generate1GBFile</td><td>6,761.82 ms</td><td>128.877 ms</td><td>282.889 ms</td><td>6,732.17 ms</td><td>597000.0000</td><td>1000.0000</td><td>1000.0000</td><td>2389.82 MB</td>
+</tr><tr><td>Parallel_Generate1GBFile</td><td>3,461.17 ms</td><td>68.908 ms</td><td>181.530 ms</td><td>3,426.40 ms</td><td>317000.0000</td><td>2000.0000</td><td>1000.0000</td><td>1268.77 MB</td>
+</tr><tr><td>LargeParallel_Generate1GBFile</td><td>4,138.85 ms</td><td>99.531 ms</td><td>290.336 ms</td><td>4,123.83 ms</td><td>318000.0000</td><td>1000.0000</td><td>-</td><td>1272.19 MB</td>
+</tr><tr><td>Original_Generate100MBFile</td><td>657.24 ms</td><td>22.158 ms</td><td>63.577 ms</td><td>660.01 ms</td><td>31000.0000</td><td>-</td><td>-</td><td>127.1 MB</td>
+</tr><tr><td>Optimized_Generate100MBFile</td><td>794.77 ms</td><td>24.511 ms</td><td>71.112 ms</td><td>800.97 ms</td><td>58000.0000</td><td>1000.0000</td><td>1000.0000</td><td>238.85 MB</td>
+</tr><tr><td>Parallel_Generate100MBFile</td><td>749.41 ms</td><td>24.063 ms</td><td>67.476 ms</td><td>750.88 ms</td><td>31000.0000</td><td>-</td><td>-</td><td>128.36 MB</td>
+</tr><tr><td>Original_Generate10MBFile</td><td>68.58 ms</td><td>2.599 ms</td><td>7.458 ms</td><td>68.16 ms</td><td>3000.0000</td><td>-</td><td>-</td><td>13 MB</td>
+</tr><tr><td>Optimized_Generate10MBFile</td><td>85.78 ms</td><td>2.998 ms</td><td>8.602 ms</td><td>87.04 ms</td><td>6000.0000</td><td>666.6667</td><td>666.6667</td><td>29.3 MB</td>
+</tr><tr><td>Parallel_Generate10MBFile</td><td>78.08 ms</td><td>2.716 ms</td><td>7.482 ms</td><td>78.70 ms</td><td>3000.0000</td><td>-</td><td>-</td><td>14.14 MB</td>
+</tr></tbody></table>
+</body>
+</html>

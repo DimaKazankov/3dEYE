@@ -99,4 +99,31 @@ public class FileGeneratorBenchmarks
             await _parallelGenerator.GenerateFileAsync(filePath, 100 * 1024 * 1024);
         }, $"parallel_100mb_{Guid.NewGuid()}.txt", _logger);
     }
+
+    [Benchmark]
+    public async Task Original_Generate10MBFile()
+    {
+        await FileHelper.WithCleanup(async filePath =>
+        {
+            await _originalGenerator.GenerateFileAsync(filePath, 10 * 1024 * 1024);
+        }, $"original_10mb_{Guid.NewGuid()}.txt", _logger);
+    }
+
+    [Benchmark]
+    public async Task Optimized_Generate10MBFile()
+    {
+        await FileHelper.WithCleanup(async filePath =>
+        {
+            await _optimizedGenerator.GenerateFileAsync(filePath, 10 * 1024 * 1024);
+        }, $"optimized_10mb_{Guid.NewGuid()}.txt", _logger);
+    }
+
+    [Benchmark]
+    public async Task Parallel_Generate10MBFile()
+    {
+        await FileHelper.WithCleanup(async filePath =>
+        {
+            await _parallelGenerator.GenerateFileAsync(filePath, 10 * 1024 * 1024);
+        }, $"parallel_10mb_{Guid.NewGuid()}.txt", _logger);
+    }
 } 

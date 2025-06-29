@@ -8,6 +8,7 @@ public class FileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
     private readonly string[] _input;
+    private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly char[] _lineBuffer;
 
     public FileGenerator(ILogger logger, string[] input)
@@ -19,6 +20,7 @@ public class FileGenerator : IFileGenerator
         
         _logger = logger;
         _input = input;
+        _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _lineBuffer = new char[256];
     }
 
@@ -41,10 +43,10 @@ public class FileGenerator : IFileGenerator
 
             while (currentSize < fileSizeInBytes)
             {
-                var line = FileGeneratorHelpers.GenerateRandomLine(_input, _lineBuffer);
+                var lineMemory = FileGeneratorHelpers.GenerateRandomLineAsMemory(_inputMemory, _lineBuffer);
                 
-                await writer.WriteLineAsync(line).ConfigureAwait(false);
-                currentSize += FileGeneratorHelpers.CalculateLineByteCount(line);
+                await writer.WriteLineAsync(lineMemory).ConfigureAwait(false);
+                currentSize += FileGeneratorHelpers.CalculateLineByteCount(lineMemory);
             }
 
             _logger.LogInformation("File generation completed successfully. Final size: {FinalSize} bytes", currentSize);

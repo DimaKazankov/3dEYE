@@ -8,6 +8,7 @@ public class OptimizedFileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
     private readonly string[] _input;
+    private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly int _bufferSize;
     private readonly int _batchSize;
     private readonly char[] _lineBuffer;
@@ -25,6 +26,7 @@ public class OptimizedFileGenerator : IFileGenerator
         
         _logger = logger;
         _input = input;
+        _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _bufferSize = bufferSize;
         _batchSize = batchSize;
         _lineBuffer = new char[512];
@@ -57,9 +59,8 @@ public class OptimizedFileGenerator : IFileGenerator
                 
                 foreach (var line in batch)
                 {
-                    var lineString = line.ToString();
-                    await writer.WriteLineAsync(lineString).ConfigureAwait(false);
-                    currentSize += FileGeneratorHelpers.CalculateLineByteCount(lineString);
+                    await writer.WriteLineAsync(line).ConfigureAwait(false);
+                    currentSize += FileGeneratorHelpers.CalculateLineByteCount(line);
                     
                     if (currentSize >= fileSizeInBytes)
                         break;
@@ -96,11 +97,7 @@ public class OptimizedFileGenerator : IFileGenerator
 
         for (var i = 0; i < maxLinesInBatch; i++)
         {
-            var number = Random.Shared.Next(1, 1000000);
-            var str = _input[Random.Shared.Next(_input.Length)];
-            
-            var lineLength = FileGeneratorHelpers.FormatLine(_lineBuffer, number, str);
-            var lineMemory = new ReadOnlyMemory<char>(_lineBuffer, 0, lineLength);
+            var lineMemory = FileGeneratorHelpers.GenerateRandomLineAsMemory(_inputMemory, _lineBuffer);
             batch.Add(lineMemory);
         }
 
