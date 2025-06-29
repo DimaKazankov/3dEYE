@@ -9,6 +9,11 @@ public class ParallelFileGenerator : IFileGenerator
     private readonly string[] _input;
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
+    private readonly char[] _lineBuffer;
+    
+    // Static readonly constants to avoid repeated allocations
+    private static readonly string Separator = ". ";
+    private static readonly string NewLine = Environment.NewLine;
 
     public ParallelFileGenerator(ILogger logger, string[] input, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
     {
@@ -23,6 +28,7 @@ public class ParallelFileGenerator : IFileGenerator
         _input = input;
         _chunkSize = chunkSize;
         _maxDegreeOfParallelism = maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
+        _lineBuffer = new char[256]; // Reusable buffer for line formatting
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -54,7 +60,7 @@ public class ParallelFileGenerator : IFileGenerator
 
                 var task = Task.Run(async () =>
                 {
-                    var tempFile = await GenerateChunkAsync(chunkIndex, currentChunkSize, chunkStartOffset);
+                    var tempFile = await GenerateChunkAsync(chunkIndex, currentChunkSize, chunkStartOffset).ConfigureAwait(false);
                     _logger.LogDebug("Chunk {ChunkIndex} completed: {TempFile}", chunkIndex, tempFile);
                     return tempFile;
                 });
@@ -63,13 +69,13 @@ public class ParallelFileGenerator : IFileGenerator
             }
 
             // Wait for all chunks to complete
-            var tempFilePaths = await Task.WhenAll(chunkTasks);
+            var tempFilePaths = await Task.WhenAll(chunkTasks).ConfigureAwait(false);
             tempFiles.AddRange(tempFilePaths);
 
             _logger.LogInformation("All chunks generated. Merging files...");
 
             // Merge chunks using memory-mapped files for optimal performance
-            await MergeChunksAsync(filePath, tempFilePaths, fileSizeInBytes);
+            await MergeChunksAsync(filePath, tempFilePaths, fileSizeInBytes).ConfigureAwait(false);
 
             _logger.LogInformation("Parallel file generation completed successfully. Final size: {FileSize} bytes", fileSizeInBytes);
         }
@@ -81,14 +87,13 @@ public class ParallelFileGenerator : IFileGenerator
         finally
         {
             // Cleanup temp files
-            await CleanupTempFilesAsync(tempFiles);
+            await CleanupTempFilesAsync(tempFiles).ConfigureAwait(false);
         }
     }
 
     private async Task<string> GenerateChunkAsync(int chunkIndex, long chunkSize, long globalOffset)
     {
         var tempFilePath = Path.Combine(Path.GetTempPath(), $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
-        var random = new Random(Environment.TickCount + chunkIndex); // Different seed per thread
         long currentSize = 0;
 
         await using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous);
@@ -96,19 +101,41 @@ public class ParallelFileGenerator : IFileGenerator
 
         while (currentSize < chunkSize)
         {
-            var number = random.Next(1, 1000000) + (int)(globalOffset / 50); // Ensure unique numbering across chunks
-            var str = _input[random.Next(_input.Length)];
-            var line = $"{number}. {str}";
-
-            await writer.WriteLineAsync(line);
-            currentSize += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
+            var number = Random.Shared.Next(1, 1000000) + (int)(globalOffset / 50); // Ensure unique numbering across chunks
+            var str = _input[Random.Shared.Next(_input.Length)];
+            
+            // Use reusable buffer for zero-allocation formatting
+            var lineLength = FormatLine(_lineBuffer, number, str);
+            var line = new string(_lineBuffer, 0, lineLength);
+            
+            await writer.WriteLineAsync(line).ConfigureAwait(false);
+            currentSize += Encoding.UTF8.GetByteCount(line) + Encoding.UTF8.GetByteCount(NewLine);
 
             if (currentSize >= chunkSize)
                 break;
         }
 
-        await writer.FlushAsync();
+        await writer.FlushAsync().ConfigureAwait(false);
         return tempFilePath;
+    }
+
+    private static int FormatLine(Span<char> buffer, int number, string str)
+    {
+        var numberStr = number.ToString();
+        
+        // Copy number
+        numberStr.CopyTo(buffer);
+        var currentPos = numberStr.Length;
+        
+        // Copy separator (using static readonly)
+        Separator.CopyTo(buffer.Slice(currentPos));
+        currentPos += Separator.Length;
+        
+        // Copy string
+        str.CopyTo(buffer.Slice(currentPos));
+        currentPos += str.Length;
+        
+        return currentPos;
     }
 
     private async Task MergeChunksAsync(string finalFilePath, string[] tempFilePaths, long totalSize)
@@ -138,7 +165,7 @@ public class ParallelFileGenerator : IFileGenerator
         // Merge chunks sequentially but with parallel processing of each chunk
         foreach (var chunkInfo in chunkPositions)
         {
-            await MergeChunkToPositionAsync(finalFileStream, chunkInfo.filePath, chunkInfo.offset, chunkInfo.size);
+            await MergeChunkToPositionAsync(finalFileStream, chunkInfo.filePath, chunkInfo.offset, chunkInfo.size).ConfigureAwait(false);
         }
     }
 
@@ -153,17 +180,17 @@ public class ParallelFileGenerator : IFileGenerator
         int bytesRead;
         long totalBytesRead = 0;
 
-        while ((bytesRead = await tempFileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+        while ((bytesRead = await tempFileStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
         {
             var bytesToWrite = Math.Min(bytesRead, (int)(size - totalBytesRead));
-            await finalFileStream.WriteAsync(buffer, 0, bytesToWrite);
+            await finalFileStream.WriteAsync(buffer, 0, bytesToWrite).ConfigureAwait(false);
             totalBytesRead += bytesToWrite;
 
             if (totalBytesRead >= size)
                 break;
         }
 
-        await finalFileStream.FlushAsync();
+        await finalFileStream.FlushAsync().ConfigureAwait(false);
     }
 
     private async Task CleanupTempFilesAsync(List<string> tempFiles)
@@ -186,7 +213,7 @@ public class ParallelFileGenerator : IFileGenerator
             return Task.CompletedTask;
         });
 
-        await Task.WhenAll(cleanupTasks);
+        await Task.WhenAll(cleanupTasks).ConfigureAwait(false);
     }
 
     private void PrepareDirectory(string filePath)

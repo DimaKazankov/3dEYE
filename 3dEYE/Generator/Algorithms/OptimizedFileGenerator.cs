@@ -9,6 +9,11 @@ public class OptimizedFileGenerator : IFileGenerator
     private readonly string[] _input;
     private readonly int _bufferSize;
     private readonly int _batchSize;
+    private readonly char[] _lineBuffer;
+    
+    // Static readonly constants to avoid repeated allocations
+    private static readonly string Separator = ". ";
+    private static readonly string NewLine = Environment.NewLine;
 
     public OptimizedFileGenerator(ILogger logger, string[] input, int bufferSize = 1024 * 1024, int batchSize = 1000)
     {
@@ -25,6 +30,7 @@ public class OptimizedFileGenerator : IFileGenerator
         _input = input;
         _bufferSize = bufferSize;
         _batchSize = batchSize;
+        _lineBuffer = new char[512]; // Reusable buffer for line formatting
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -40,7 +46,6 @@ public class OptimizedFileGenerator : IFileGenerator
 
         try
         {
-            var random = new Random();
             long currentSize = 0;
             var batchCount = 0;
 
@@ -53,12 +58,13 @@ public class OptimizedFileGenerator : IFileGenerator
             while (currentSize < fileSizeInBytes)
             {
                 // Process in batches to reduce GC pressure
-                var batch = GenerateBatch(random, fileSizeInBytes - currentSize);
+                var batch = GenerateBatch(fileSizeInBytes - currentSize);
                 
                 foreach (var line in batch)
                 {
-                    await writer.WriteLineAsync(line);
-                    currentSize += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
+                    var lineString = line.ToString();
+                    await writer.WriteLineAsync(lineString).ConfigureAwait(false);
+                    currentSize += Encoding.UTF8.GetByteCount(lineString) + Encoding.UTF8.GetByteCount(NewLine);
                     
                     if (currentSize >= fileSizeInBytes)
                         break;
@@ -74,8 +80,8 @@ public class OptimizedFileGenerator : IFileGenerator
                 }
             }
 
-            await writer.FlushAsync();
-            await fileStream.FlushAsync();
+            await writer.FlushAsync().ConfigureAwait(false);
+            await fileStream.FlushAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Optimized file generation completed. Final size: {FinalSize} bytes, Batches processed: {BatchCount}", 
                 currentSize, batchCount);
@@ -87,9 +93,9 @@ public class OptimizedFileGenerator : IFileGenerator
         }
     }
 
-    private IEnumerable<string> GenerateBatch(Random random, long remainingBytes)
+    private IEnumerable<ReadOnlyMemory<char>> GenerateBatch(long remainingBytes)
     {
-        var batch = new List<string>();
+        var batch = new List<ReadOnlyMemory<char>>();
         var estimatedBytesPerLine = 50L; // Use long to avoid overflow
         
         // For very small remaining bytes, generate at least one line
@@ -97,13 +103,35 @@ public class OptimizedFileGenerator : IFileGenerator
 
         for (int i = 0; i < maxLinesInBatch; i++)
         {
-            var number = random.Next(1, 1000000);
-            var str = _input[random.Next(_input.Length)];
-            var line = $"{number}. {str}";
-            batch.Add(line);
+            var number = Random.Shared.Next(1, 1000000);
+            var str = _input[Random.Shared.Next(_input.Length)];
+            
+            // Use reusable buffer for zero-allocation formatting
+            var lineLength = FormatLine(_lineBuffer, number, str);
+            var lineMemory = new ReadOnlyMemory<char>(_lineBuffer, 0, lineLength);
+            batch.Add(lineMemory);
         }
 
         return batch;
+    }
+
+    private static int FormatLine(Span<char> buffer, int number, string str)
+    {
+        var numberStr = number.ToString();
+        
+        // Copy number
+        numberStr.CopyTo(buffer);
+        var currentPos = numberStr.Length;
+        
+        // Copy separator (using static readonly)
+        Separator.CopyTo(buffer.Slice(currentPos));
+        currentPos += Separator.Length;
+        
+        // Copy string
+        str.CopyTo(buffer.Slice(currentPos));
+        currentPos += str.Length;
+        
+        return currentPos;
     }
 
     private void PrepareDirectory(string filePath)

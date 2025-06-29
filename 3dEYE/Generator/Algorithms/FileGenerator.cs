@@ -7,6 +7,10 @@ public class FileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
     private readonly string[] _input;
+    private readonly char[] _lineBuffer;
+
+    private const string Separator = ". ";
+    private static readonly string NewLine = Environment.NewLine;
 
     public FileGenerator(ILogger logger, string[] input)
     {
@@ -17,6 +21,7 @@ public class FileGenerator : IFileGenerator
         
         _logger = logger;
         _input = input;
+        _lineBuffer = new char[256];
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -31,7 +36,6 @@ public class FileGenerator : IFileGenerator
 
         try
         {
-            var random = new Random();
             await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
             long currentSize = 0;
 
@@ -39,12 +43,14 @@ public class FileGenerator : IFileGenerator
 
             while (currentSize < fileSizeInBytes)
             {
-                var number = random.Next(1, 1000000);
-                var str = _input[random.Next(_input.Length)];
-                var line = $"{number}. {str}";
-
-                await writer.WriteLineAsync(line);
-                currentSize += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
+                var number = Random.Shared.Next(1, 1000000);
+                var str = _input[Random.Shared.Next(_input.Length)];
+                
+                var lineLength = FormatLine(_lineBuffer, number, str);
+                var line = new string(_lineBuffer, 0, lineLength);
+                
+                await writer.WriteLineAsync(line).ConfigureAwait(false);
+                currentSize += Encoding.UTF8.GetByteCount(line) + Encoding.UTF8.GetByteCount(NewLine);
             }
 
             _logger.LogInformation("File generation completed successfully. Final size: {FinalSize} bytes", currentSize);
@@ -54,6 +60,22 @@ public class FileGenerator : IFileGenerator
             _logger.LogError(ex, "Error occurred during file generation: {FilePath}", filePath);
             throw;
         }
+    }
+
+    private static int FormatLine(Span<char> buffer, int number, string str)
+    {
+        var numberStr = number.ToString();
+        
+        numberStr.CopyTo(buffer);
+        var currentPos = numberStr.Length;
+        
+        Separator.CopyTo(buffer.Slice(currentPos));
+        currentPos += Separator.Length;
+        
+        str.CopyTo(buffer.Slice(currentPos));
+        currentPos += str.Length;
+        
+        return currentPos;
     }
 
     private void PrepareDirectory(string filePath)
