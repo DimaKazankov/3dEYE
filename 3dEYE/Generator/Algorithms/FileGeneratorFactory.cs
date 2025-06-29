@@ -4,16 +4,41 @@ namespace _3dEYE.Generator.Algorithms;
 
 public class FileGeneratorFactory(ILogger logger)
 {
-    private static readonly string[] SampleStrings = ["Apple", "Banana is yellow", "Cherry is the best", "Something something something"];
-    
-    public IFileGenerator GetFileGenerator()
+    private static readonly string[] SampleStrings = [
+        "Apple", "Banana is yellow", "Cherry is the best", "Something something something",
+        "Optimized for large files", "Batch processing enabled", "Memory efficient generation",
+        "High performance I/O", "Reduced GC pressure", "Async operations",
+        "Parallel processing enabled", "Memory-mapped file merging", "High performance generation",
+        "Multi-threaded file creation", "Optimized for large files", "Chunk-based processing"
+    ];
+
+    public IFileGenerator CreateBasicGenerator() 
+        => new FileGenerator(logger, SampleStrings);
+    public IFileGenerator CreateOptimizedGenerator(int bufferSize = 1024 * 1024, int batchSize = 1000) 
+        => new OptimizedFileGenerator(logger, SampleStrings, bufferSize, batchSize);
+
+    public IFileGenerator CreateParallelGenerator(int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0) 
+        => new ParallelFileGenerator(logger, SampleStrings, chunkSize, maxDegreeOfParallelism);
+
+    public IFileGenerator CreateGeneratorForFileSize(long fileSizeInBytes)
     {
-        logger.LogDebug("Creating new FileGenerator instance with {SampleCount} sample strings", SampleStrings.Length);
-        logger.LogTrace("Sample strings: {SampleStrings}", string.Join(", ", SampleStrings));
-        
-        var generator = new FileGenerator(logger, SampleStrings);
-        logger.LogInformation("FileGenerator instance created successfully");
-        
-        return generator;
+        const long oneGb = 1024L * 1024 * 1024;
+        const long tenGb = 10L * oneGb;
+        const long hundredGb = 100L * oneGb;
+        switch (fileSizeInBytes)
+        {
+            case < oneGb:
+                logger.LogInformation("File size {FileSize} bytes (< 1GB), using basic FileGenerator", fileSizeInBytes);
+                return CreateBasicGenerator();
+            case < tenGb:
+                logger.LogInformation("File size {FileSize} bytes (1-10GB), using optimized FileGenerator", fileSizeInBytes);
+                return CreateOptimizedGenerator(4 * 1024 * 1024, 2000); // 4MB buffer, 2000 batch size
+            case < hundredGb:
+                logger.LogInformation("File size {FileSize} bytes (10-100GB), using parallel FileGenerator", fileSizeInBytes);
+                return CreateParallelGenerator(200 * 1024 * 1024, 4); // 200MB chunks, 4 threads
+            default:
+                logger.LogInformation("File size {FileSize} bytes (> 100GB), using ultra-large parallel FileGenerator", fileSizeInBytes);
+                return CreateParallelGenerator(500 * 1024 * 1024, 8); // 500MB chunks, 8 threads
+        }
     }
 }

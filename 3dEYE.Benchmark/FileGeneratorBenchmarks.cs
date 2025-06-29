@@ -10,12 +10,13 @@ namespace _3dEYE.Benchmark;
 [SimpleJob]
 public class FileGeneratorBenchmarks
 {
+    private const long OneGb = 1024L * 1024L * 1024L; // 1 GB in bytes
+    
     private IFileGenerator _originalGenerator = null!;
     private IFileGenerator _optimizedGenerator = null!;
     private IFileGenerator _parallelGenerator = null!;
     private IFileGenerator _largeParallelGenerator = null!;
     private ILogger<FileGeneratorBenchmarks>? _logger;
-    private const long OneGB = 1024L * 1024L * 1024L; // 1 GB in bytes
 
     [GlobalSetup]
     public void Setup()
@@ -28,14 +29,12 @@ public class FileGeneratorBenchmarks
 
         _logger = loggerFactory.CreateLogger<FileGeneratorBenchmarks>();
         
-        var originalFactory = new FileGeneratorFactory(_logger);
-        var optimizedFactory = new OptimizedFileGeneratorFactory(_logger);
-        var parallelFactory = new ParallelFileGeneratorFactory(_logger);
+        var fileGeneratorFactory = new FileGeneratorFactory(_logger);
         
-        _originalGenerator = originalFactory.GetFileGenerator();
-        _optimizedGenerator = optimizedFactory.GetOptimizedFileGenerator();
-        _parallelGenerator = parallelFactory.GetBalancedParallelGenerator();
-        _largeParallelGenerator = parallelFactory.GetLargeFileParallelGenerator();
+        _originalGenerator = fileGeneratorFactory.CreateBasicGenerator();
+        _optimizedGenerator = fileGeneratorFactory.CreateOptimizedGenerator();
+        _parallelGenerator = fileGeneratorFactory.CreateParallelGenerator();
+        _largeParallelGenerator = fileGeneratorFactory.CreateParallelGenerator(200 * 1024 * 1024, 4);
     }
 
     [Benchmark]
@@ -43,7 +42,7 @@ public class FileGeneratorBenchmarks
     {
         await FileHelper.WithCleanup(async filePath =>
         {
-            await _originalGenerator.GenerateFileAsync(filePath, OneGB);
+            await _originalGenerator.GenerateFileAsync(filePath, OneGb);
         }, $"original_1gb_{Guid.NewGuid()}.txt", _logger);
     }
 
@@ -52,7 +51,7 @@ public class FileGeneratorBenchmarks
     {
         await FileHelper.WithCleanup(async filePath =>
         {
-            await _optimizedGenerator.GenerateFileAsync(filePath, OneGB);
+            await _optimizedGenerator.GenerateFileAsync(filePath, OneGb);
         }, $"optimized_1gb_{Guid.NewGuid()}.txt", _logger);
     }
 
@@ -61,7 +60,7 @@ public class FileGeneratorBenchmarks
     {
         await FileHelper.WithCleanup(async filePath =>
         {
-            await _parallelGenerator.GenerateFileAsync(filePath, OneGB);
+            await _parallelGenerator.GenerateFileAsync(filePath, OneGb);
         }, $"parallel_1gb_{Guid.NewGuid()}.txt", _logger);
     }
 
@@ -70,7 +69,7 @@ public class FileGeneratorBenchmarks
     {
         await FileHelper.WithCleanup(async filePath =>
         {
-            await _largeParallelGenerator.GenerateFileAsync(filePath, OneGB);
+            await _largeParallelGenerator.GenerateFileAsync(filePath, OneGb);
         }, $"large_parallel_1gb_{Guid.NewGuid()}.txt", _logger);
     }
 
