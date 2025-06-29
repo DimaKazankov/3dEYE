@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>_3dEYE.Benchmark.ParallelFileGeneratorBenchmark-20250628-232224</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.2, Linux Manjaro Linux
+Intel Core i7-6820HQ CPU 2.70GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
+.NET SDK 9.0.105
+  [Host]     : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+  DefaultJob : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method                 </th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Gen0  </th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Original_Generate1GBFile</td><td>9,803.3 ms</td><td>192.01 ms</td><td>379.02 ms</td><td>9,791.1 ms</td><td>1502000.0000</td><td>1000.0000</td><td>-</td><td>5992.14 MB</td>
+</tr><tr><td>Optimized_Generate1GBFile</td><td>8,382.7 ms</td><td>165.47 ms</td><td>294.12 ms</td><td>8,397.4 ms</td><td>1594000.0000</td><td>1000.0000</td><td>1000.0000</td><td>6362.1 MB</td>
+</tr><tr><td>Parallel_Generate1GBFile</td><td>4,240.9 ms</td><td>143.07 ms</td><td>419.60 ms</td><td>4,122.0 ms</td><td>1412000.0000</td><td>2000.0000</td><td>1000.0000</td><td>5611.25 MB</td>
+</tr><tr><td>LargeParallel_Generate1GBFile</td><td>4,595.0 ms</td><td>90.24 ms</td><td>190.35 ms</td><td>4,615.5 ms</td><td>1416000.0000</td><td>1000.0000</td><td>-</td><td>5620.72 MB</td>
+</tr><tr><td>Original_Generate100MBFile</td><td>993.3 ms</td><td>35.00 ms</td><td>100.43 ms</td><td>1,015.6 ms</td><td>146000.0000</td><td>-</td><td>-</td><td>585.51 MB</td>
+</tr><tr><td>Optimized_Generate100MBFile</td><td>955.2 ms</td><td>28.26 ms</td><td>80.18 ms</td><td>968.7 ms</td><td>156000.0000</td><td>1000.0000</td><td>1000.0000</td><td>626.71 MB</td>
+</tr><tr><td>Parallel_Generate100MBFile</td><td>706.9 ms</td><td>26.37 ms</td><td>75.67 ms</td><td>705.9 ms</td><td>139000.0000</td><td>-</td><td>-</td><td>554.85 MB</td>
+</tr></tbody></table>
+</body>
+</html>

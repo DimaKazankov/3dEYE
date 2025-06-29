@@ -7,7 +7,6 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        // Create a logger factory for the program
         var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConsole();
@@ -16,17 +15,18 @@ public class Program
 
         var logger = loggerFactory.CreateLogger<Program>();
 
-        logger.LogInformation("Starting FileGenerator Benchmark...");
-        logger.LogInformation("This will test file generation performance with different file sizes.");
-        logger.LogWarning("Note: The 1GB benchmark may take significant time and disk space.");
+        logger.LogInformation("Running parallel FileGenerator comparison benchmark...");
+        var parallelSummary = BenchmarkRunner.Run<FileGeneratorBenchmarks>();
+        
+        logger.LogInformation("Parallel benchmark completed!");
+        logger.LogInformation("Results saved to: {ResultsPath}", parallelSummary.ResultsDirectoryPath);
 
-        // Run the benchmark
-        var summary = BenchmarkRunner.Run<FileGeneratorBenchmarkProgram>();
-        
-        logger.LogInformation("Benchmark completed!");
-        logger.LogInformation("Results saved to: {ResultsPath}", summary.ResultsDirectoryPath);
-        
-        // Display some key metrics
+        logger.LogInformation("=== PARALLEL GENERATOR COMPARISON ===");
+        DisplayBenchmarkResults(parallelSummary, logger);
+    }
+
+    private static void DisplayBenchmarkResults(BenchmarkDotNet.Reports.Summary summary, ILogger logger)
+    {
         foreach (var report in summary.Reports)
         {
             var methodName = report.BenchmarkCase.Descriptor.WorkloadMethod.Name;
