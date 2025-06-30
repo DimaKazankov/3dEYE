@@ -15,14 +15,21 @@ public class Program
 
         var logger = loggerFactory.CreateLogger<Program>();
 
-        logger.LogInformation("Running parallel FileGenerator comparison benchmark...");
-        var parallelSummary = BenchmarkRunner.Run<FileGeneratorBenchmarks>();
-        
-        logger.LogInformation("Parallel benchmark completed!");
-        logger.LogInformation("Results saved to: {ResultsPath}", parallelSummary.ResultsDirectoryPath);
+        try
+        {
+            var sorterSummary = BenchmarkRunner.Run<ExternalMergeSorterBenchmarks>();
+            
+            logger.LogInformation("ExternalMergeSorter benchmark completed!");
+            logger.LogInformation("Results saved to: {ResultsPath}", sorterSummary.ResultsDirectoryPath);
 
-        logger.LogInformation("=== PARALLEL GENERATOR COMPARISON ===");
-        DisplayBenchmarkResults(parallelSummary, logger);
+            logger.LogInformation("=== EXTERNAL MERGE SORTER BENCHMARK RESULTS ===");
+            DisplayBenchmarkResults(sorterSummary, logger);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Benchmark failed with error: {Message}", ex.Message);
+            throw;
+        }
     }
 
     private static void DisplayBenchmarkResults(BenchmarkDotNet.Reports.Summary summary, ILogger logger)
