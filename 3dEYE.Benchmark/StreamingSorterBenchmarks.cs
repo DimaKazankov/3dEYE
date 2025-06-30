@@ -1,21 +1,21 @@
-using _3dEYE.Generator.Algorithms;
+﻿using _3dEYE.Generator.Algorithms;
+using _3dEYE.Sorter;
+using _3dEYE.Sorter.Models;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Microsoft.Extensions.Logging;
-using _3dEYE.Sorter;
-using _3dEYE.Sorter.Models;
 
 namespace _3dEYE.Benchmark;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90, warmupCount: 1, iterationCount: 3)]
-public class ExternalMergeSorterBenchmarks
+public class StreamingSorterBenchmarks
 {
     private string _testDirectory = null!;
     private string _inputFile = null!;
     private string _outputFile = null!;
-    private ExternalMergeSorter _sorter = null!;
-    private ILogger<ExternalMergeSorter> _logger = null!;
+    private StreamingSorter _sorter = null!;
+    private ILogger<StreamingSorter> _logger = null!;
 
     [Params(100 * 1024 * 1024, 1024 * 1024 * 1024)] // 100MB, 1GB
     public int FileSizeBytes { get; set; }
@@ -23,10 +23,13 @@ public class ExternalMergeSorterBenchmarks
     [Params(1024 * 1024, 10 * 1024 * 1024)] // 1MB buffer
     public int BufferSizeBytes { get; set; }
 
+    [Params(50000, 100000)] // Different memory limits
+    public int MaxMemoryLines { get; set; }
+
     [GlobalSetup]
     public async Task Setup()
     {
-        _testDirectory = Path.Combine(Path.GetTempPath(), $"ExternalMergeBenchmark_{Guid.NewGuid():N}");
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"StreamingBenchmark_{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testDirectory);
 
         var loggerFactory = LoggerFactory.Create(builder =>
@@ -35,7 +38,7 @@ public class ExternalMergeSorterBenchmarks
             builder.SetMinimumLevel(LogLevel.Warning);
         });
         
-        _logger = loggerFactory.CreateLogger<ExternalMergeSorter>();
+        _logger = loggerFactory.CreateLogger<StreamingSorter>();
 
         _inputFile = Path.Combine(_testDirectory, "benchmark_input.txt");
         _outputFile = Path.Combine(_testDirectory, "benchmark_output.txt");
@@ -44,7 +47,7 @@ public class ExternalMergeSorterBenchmarks
         await GenerateTestFile(_inputFile, FileSizeBytes);
 
         // Initialize sorter
-        _sorter = new ExternalMergeSorter(_logger, BufferSizeBytes, _testDirectory);
+        _sorter = new StreamingSorter(_logger, MaxMemoryLines, BufferSizeBytes);
     }
 
     [GlobalCleanup]
@@ -62,14 +65,15 @@ public class ExternalMergeSorterBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory("ExternalMerge")]
+    [BenchmarkCategory("Streaming")]
     public async Task Sort()
     {
-        await _sorter.SortAsync(_inputFile, _outputFile, bufferSizeBytes: BufferSizeBytes, new LineDataComparer());
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        await _sorter.SortAsync(_inputFile, _outputFile, bufferSizeBytes: BufferSizeBytes, new LineDataComparer(), cancellationToken: cts.Token);
     }
 
     [Benchmark]
-    [BenchmarkCategory("ExternalMerge")]
+    [BenchmarkCategory("Streaming")]
     public async Task GetStatistics()
     {
         await _sorter.GetSortStatisticsAsync(_inputFile, BufferSizeBytes);

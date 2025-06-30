@@ -4,10 +4,10 @@ using _3dEYE.Sorter.Models;
 
 namespace _3dEYE.Sorter;
 
-public class MergeManager(int bufferSize = 1024 * 1024, IComparer<string>? comparer = null)
+public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? comparer = null)
 {
     private readonly ArrayPool<char> _charPool = ArrayPool<char>.Shared;
-    private readonly IComparer<string> _comparer = comparer ?? StringComparer.Ordinal;
+    private readonly IComparer<LineData> _comparer = comparer ?? new LineDataComparer();
 
     public async Task MergeChunksAsync(
         List<string> chunkFiles, 
@@ -46,7 +46,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<string>? compa
             // Clean up intermediate files from previous pass
             if (passNumber > 0)
             {
-                CleanupIntermediateFiles(currentChunks, cancellationToken);
+                CleanupIntermediateFiles(currentChunks);
             }
 
             currentChunks = nextChunks;
@@ -101,7 +101,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<string>? compa
                 {
                     if (currentLines[i] == null) continue;
 
-                    if (minLine == null || currentLines[i]!.Value.CompareTo(minLine.Value) < 0)
+                    if (minLine == null || _comparer.Compare(currentLines[i]!.Value, minLine.Value) < 0)
                     {
                         minLine = currentLines[i];
                         minIndex = i;
@@ -131,55 +131,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<string>? compa
         return outputFile;
     }
 
-    public async Task MergeTwoFilesAsync(
-        string file1, 
-        string file2, 
-        string outputFile, 
-        CancellationToken cancellationToken = default)
-    {
-        using var reader1 = new StreamReader(file1, Encoding.UTF8, true, bufferSize);
-        using var reader2 = new StreamReader(file2, Encoding.UTF8, true, bufferSize);
-        await using var writer = new StreamWriter(outputFile, false, Encoding.UTF8, bufferSize);
-
-        var line1 = await reader1.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-        var line2 = await reader2.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-
-        while (line1 != null && line2 != null)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (_comparer.Compare(line1, line2) <= 0)
-            {
-                await writer.WriteLineAsync(line1.AsMemory(), cancellationToken).ConfigureAwait(false);
-                line1 = await reader1.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await writer.WriteLineAsync(line2.AsMemory(), cancellationToken).ConfigureAwait(false);
-                line2 = await reader2.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        // Write remaining lines from file1
-        while (line1 != null)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await writer.WriteLineAsync(line1.AsMemory(), cancellationToken).ConfigureAwait(false);
-            line1 = await reader1.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        // Write remaining lines from file2
-        while (line2 != null)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await writer.WriteLineAsync(line2.AsMemory(), cancellationToken).ConfigureAwait(false);
-            line2 = await reader2.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    private void CleanupIntermediateFiles(
-        List<string> files, 
-        CancellationToken cancellationToken)
+    private void CleanupIntermediateFiles(List<string> files)
     {
         foreach (var file in files)
         {

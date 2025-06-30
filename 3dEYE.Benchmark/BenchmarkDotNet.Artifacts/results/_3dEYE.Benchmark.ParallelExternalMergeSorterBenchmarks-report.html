@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>_3dEYE.Benchmark.ParallelExternalMergeSorterBenchmarks-20250630-130133</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.2, Windows 11 (10.0.26100.4351/24H2/2024Update/HudsonValley)
+Unknown processor
+.NET SDK 9.0.205
+  [Host]     : .NET 9.0.6 (9.0.625.26613), X64 RyuJIT AVX2
+  Job-OYOULF : .NET 9.0.6 (9.0.625.26613), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>Runtime=.NET 9.0  IterationCount=3  WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method </th><th>FileSizeBytes</th><th>BufferSizeBytes</th><th>MaxDegreeOfParallelism</th><th>Mean       </th><th>Error       </th><th>StdDev     </th><th>Gen0   </th><th>Gen1  </th><th>Gen2  </th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Sort</td><td>104857600</td><td>1048576</td><td>4</td><td>15,702,302.40 &mu;s</td><td>2,275,369.883 &mu;s</td><td>124,720.702 &mu;s</td><td>1508000.0000</td><td>321000.0000</td><td>237000.0000</td><td>11020678912 B</td>
+</tr><tr><td>GetStatistics</td><td>104857600</td><td>1048576</td><td>4</td><td>34.58 &mu;s</td><td>4.843 &mu;s</td><td>0.265 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>104857600</td><td>1048576</td><td>8</td><td>14,277,395.57 &mu;s</td><td>2,785,310.847 &mu;s</td><td>152,672.287 &mu;s</td><td>1464000.0000</td><td>288000.0000</td><td>192000.0000</td><td>11021026728 B</td>
+</tr><tr><td>GetStatistics</td><td>104857600</td><td>1048576</td><td>8</td><td>38.25 &mu;s</td><td>23.354 &mu;s</td><td>1.280 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>104857600</td><td>10485760</td><td>4</td><td>16,302,727.97 &mu;s</td><td>8,702,819.440 &mu;s</td><td>477,030.902 &mu;s</td><td>795000.0000</td><td>66000.0000</td><td>25000.0000</td><td>8949490568 B</td>
+</tr><tr><td>GetStatistics</td><td>104857600</td><td>10485760</td><td>4</td><td>34.10 &mu;s</td><td>4.615 &mu;s</td><td>0.253 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>104857600</td><td>10485760</td><td>8</td><td>13,074,625.03 &mu;s</td><td>2,248,368.337 &mu;s</td><td>123,240.656 &mu;s</td><td>796000.0000</td><td>61000.0000</td><td>20000.0000</td><td>8974896152 B</td>
+</tr><tr><td>GetStatistics</td><td>104857600</td><td>10485760</td><td>8</td><td>29.35 &mu;s</td><td>15.330 &mu;s</td><td>0.840 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>1073741824</td><td>1048576</td><td>4</td><td>155,037,419.00 &mu;s</td><td>175,284,994.251 &mu;s</td><td>9,607,962.046 &mu;s</td><td>18983000.0000</td><td>3198000.0000</td><td>2332000.0000</td><td>125632086352 B</td>
+</tr><tr><td>GetStatistics</td><td>1073741824</td><td>1048576</td><td>4</td><td>26.99 &mu;s</td><td>4.014 &mu;s</td><td>0.220 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>1073741824</td><td>1048576</td><td>8</td><td>152,912,073.10 &mu;s</td><td>319,075,110.384 &mu;s</td><td>17,489,583.542 &mu;s</td><td>18694000.0000</td><td>2872000.0000</td><td>2002000.0000</td><td>125763612168 B</td>
+</tr><tr><td>GetStatistics</td><td>1073741824</td><td>1048576</td><td>8</td><td>34.26 &mu;s</td><td>45.686 &mu;s</td><td>2.504 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>1073741824</td><td>10485760</td><td>4</td><td>161,029,984.83 &mu;s</td><td>15,527,328.972 &mu;s</td><td>851,105.299 &mu;s</td><td>11825000.0000</td><td>653000.0000</td><td>226000.0000</td><td>104952929616 B</td>
+</tr><tr><td>GetStatistics</td><td>1073741824</td><td>10485760</td><td>4</td><td>39.43 &mu;s</td><td>35.487 &mu;s</td><td>1.945 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr><tr><td>Sort</td><td>1073741824</td><td>10485760</td><td>8</td><td>184,885,191.57 &mu;s</td><td>504,006,343.397 &mu;s</td><td>27,626,288.487 &mu;s</td><td>11911000.0000</td><td>645000.0000</td><td>216000.0000</td><td>105339038416 B</td>
+</tr><tr><td>GetStatistics</td><td>1073741824</td><td>10485760</td><td>8</td><td>29.82 &mu;s</td><td>15.906 &mu;s</td><td>0.872 &mu;s</td><td>0.0610</td><td>-</td><td>-</td><td>296 B</td>
+</tr></tbody></table>
+</body>
+</html>

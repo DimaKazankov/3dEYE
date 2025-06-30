@@ -13,6 +13,7 @@ public class ChunkManager(int bufferSize = 1024 * 1024)
     public async Task<List<string>> SplitIntoChunksAsync(
         string inputFilePath, 
         string tempDirectory, 
+        IComparer<LineData> comparer,
         CancellationToken cancellationToken = default)
     {
         var chunkFiles = new List<string>();
@@ -39,7 +40,7 @@ public class ChunkManager(int bufferSize = 1024 * 1024)
             // If we've accumulated enough lines to fill our buffer, sort and write chunk
             if (lines.Count >= targetLinesPerChunk)
             {
-                var chunkFile = await WriteChunkAsync(lines, tempDirectory, chunkIndex++, cancellationToken).ConfigureAwait(false);
+                var chunkFile = await WriteChunkAsync(lines, tempDirectory, chunkIndex++, comparer, cancellationToken).ConfigureAwait(false);
                 chunkFiles.Add(chunkFile);
                 lines.Clear();
             }
@@ -48,7 +49,7 @@ public class ChunkManager(int bufferSize = 1024 * 1024)
         // Write remaining lines as final chunk
         if (lines.Count > 0)
         {
-            var chunkFile = await WriteChunkAsync(lines, tempDirectory, chunkIndex, cancellationToken).ConfigureAwait(false);
+            var chunkFile = await WriteChunkAsync(lines, tempDirectory, chunkIndex, comparer, cancellationToken).ConfigureAwait(false);
             chunkFiles.Add(chunkFile);
         }
         
@@ -59,10 +60,10 @@ public class ChunkManager(int bufferSize = 1024 * 1024)
         List<LineData> lines, 
         string tempDirectory, 
         int chunkIndex, 
+        IComparer<LineData> comparer,
         CancellationToken cancellationToken)
     {
-        // Sort the chunk in memory
-        lines.Sort();
+        lines.Sort(comparer);
         
         var chunkFilePath = Path.Combine(tempDirectory, $"chunk_{chunkIndex:D6}.tmp");
 
@@ -107,7 +108,7 @@ public class ChunkManager(int bufferSize = 1024 * 1024)
         return (int)Math.Ceiling((double)estimatedLines / linesPerChunk);
     }
 
-    public static void CleanupChunks(IEnumerable<string> chunkFiles, ILogger? logger = null)
+    public static void CleanupChunks(IEnumerable<string> chunkFiles, ILogger logger)
     {
         foreach (var chunkFile in chunkFiles)
         {
@@ -120,7 +121,7 @@ public class ChunkManager(int bufferSize = 1024 * 1024)
             }
             catch (Exception ex)
             {
-                logger?.LogWarning("Failed to delete chunk file {ChunkFile}: {Message}", chunkFile, ex.Message);
+                logger.LogWarning("Failed to delete chunk file {ChunkFile}: {Message}", chunkFile, ex.Message);
             }
         }
     }
