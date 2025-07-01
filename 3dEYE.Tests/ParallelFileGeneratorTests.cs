@@ -14,7 +14,7 @@ public class ParallelFileGeneratorTests
         var logger = new Mock<ILogger>();
         var input = new[] { "Large chunk test" };
         var largeChunkSize = 50 * 1024 * 1024; // 50MB chunks
-        var parallelGenerator = new ParallelFileGenerator(logger.Object, input, chunkSize: largeChunkSize, maxDegreeOfParallelism: 4);
+        var parallelGenerator = new ParallelFileGenerator(logger.Object, input, "/tmp/parallel_test.txt", chunkSize: largeChunkSize, maxDegreeOfParallelism: 4);
         var expectedSize = 1024 * 1024L; // 1MB
 
         // Act & Assert

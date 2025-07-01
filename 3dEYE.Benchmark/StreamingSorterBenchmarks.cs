@@ -81,7 +81,7 @@ public class StreamingSorterBenchmarks
 
     private async Task GenerateTestFile(string filePath, int targetSizeBytes)
     {
-        var generator = new FileGeneratorFactory(_logger).CreateParallelGenerator(200 * 1024 * 1024, Environment.ProcessorCount);
+        var generator = new FileGeneratorFactory(_logger).CreateParallelGenerator(filePath, 200 * 1024 * 1024, Environment.ProcessorCount);
         await generator.GenerateFileAsync(filePath, targetSizeBytes);
     }
 }

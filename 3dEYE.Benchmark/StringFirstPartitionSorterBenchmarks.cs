@@ -5,31 +5,19 @@ using _3dEYE.Sorter;
 using _3dEYE.Sorter.Models;
 using _3dEYE.Generator.Algorithms;
 using System.Text;
+using BenchmarkDotNet.Jobs;
 
 namespace _3dEYE.Benchmark;
 
 [MemoryDiagnoser]
-[SimpleJob]
+[SimpleJob(RuntimeMoniker.Net90, warmupCount: 1, iterationCount: 3)]
 public class StringFirstPartitionSorterBenchmarks
 {
-    private readonly ILogger _logger;
-    private readonly string _testDataDir;
-    private readonly LineDataComparer _comparer;
-
-    public StringFirstPartitionSorterBenchmarks()
-    {
-        var loggerFactory = LoggerFactory.Create(builder =>
-        {
-            builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Warning);
-        });
-        _logger = loggerFactory.CreateLogger<StringFirstPartitionSorterBenchmarks>();
-        _testDataDir = Path.Combine(Path.GetTempPath(), "3dEYE_Benchmark_Data");
-        _comparer = new LineDataComparer();
-        
-        // Ensure test data directory exists
-        Directory.CreateDirectory(_testDataDir);
-    }
+    private string _testDirectory = null!;
+    private string _inputFile = null!;
+    private string _outputFile = null!;
+    private StringFirstPartitionSorter _sorter = null!;
+    private ILogger<StringFirstPartitionSorter> _logger = null!;
 
     [Params(104857600, 1073741824)] // 100MB, 1GB
     public long FileSizeBytes { get; set; }
@@ -43,60 +31,61 @@ public class StringFirstPartitionSorterBenchmarks
     [Params(4, 8)] // 4, 8 threads
     public int MaxDegreeOfParallelism { get; set; }
 
-    private string InputFilePath => Path.Combine(_testDataDir, $"test_data_{FileSizeBytes}.txt");
-    private string OutputFilePath => Path.Combine(_testDataDir, $"sorted_output_{FileSizeBytes}.txt");
-
     [GlobalSetup]
-    public async Task GlobalSetup()
+    public async Task Setup()
     {
-        // Clean up output file before each run
-        if (File.Exists(OutputFilePath))
-            File.Delete(OutputFilePath);
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"StringFirstPartitionBenchmark_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(_testDirectory);
 
-        // Generate test data if it doesn't exist
-        if (!File.Exists(InputFilePath))
+        var loggerFactory = LoggerFactory.Create(builder =>
         {
-            await GenerateTestFile(InputFilePath, (int)FileSizeBytes);
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Warning);
+        });
+        
+        _logger = loggerFactory.CreateLogger<StringFirstPartitionSorter>();
+
+        _inputFile = Path.Combine(_testDirectory, "benchmark_input.txt");
+        _outputFile = Path.Combine(_testDirectory, "benchmark_output.txt");
+
+        // Generate test data using ParallelFileGenerator
+        await GenerateTestFile(_inputFile, (int)FileSizeBytes);
+
+        // Initialize sorter
+        _sorter = new StringFirstPartitionSorter(_logger, MaxMemoryLines, BufferSizeBytes, MaxDegreeOfParallelism);
+    }
+
+    [GlobalCleanup]
+    public void Cleanup()
+    {
+        try
+        {
+            if (Directory.Exists(_testDirectory)) 
+                Directory.Delete(_testDirectory, true);
+        }
+        catch
+        { 
+            // Ignore cleanup errors
         }
     }
 
     [Benchmark]
+    [BenchmarkCategory("StringFirstPartition")]
     public async Task Sort()
     {
-        var sorter = new StringFirstPartitionSorter(
-            _logger, 
-            MaxMemoryLines, 
-            BufferSizeBytes, 
-            MaxDegreeOfParallelism);
-
-        await sorter.SortAsync(InputFilePath, OutputFilePath, _comparer);
+        await _sorter.SortAsync(_inputFile, _outputFile, new LineDataComparer());
     }
 
     [Benchmark]
+    [BenchmarkCategory("StringFirstPartition")]
     public async Task GetStatistics()
     {
-        var sorter = new StringFirstPartitionSorter(
-            _logger, 
-            MaxMemoryLines, 
-            BufferSizeBytes, 
-            MaxDegreeOfParallelism);
-
-        await sorter.GetSortStatisticsAsync(InputFilePath, BufferSizeBytes);
+        await _sorter.GetSortStatisticsAsync(_inputFile, BufferSizeBytes);
     }
 
     private async Task GenerateTestFile(string filePath, int targetSizeBytes)
     {
-        var generator = new FileGeneratorFactory(_logger).CreateParallelGenerator(200 * 1024 * 1024, Environment.ProcessorCount);
+        var generator = new FileGeneratorFactory(_logger).CreateParallelGenerator(filePath, 200 * 1024 * 1024, Environment.ProcessorCount);
         await generator.GenerateFileAsync(filePath, targetSizeBytes);
-    }
-
-    [GlobalCleanup]
-    public void GlobalCleanup()
-    {
-        // Clean up output files
-        if (File.Exists(OutputFilePath))
-        {
-            File.Delete(OutputFilePath);
-        }
     }
 } 

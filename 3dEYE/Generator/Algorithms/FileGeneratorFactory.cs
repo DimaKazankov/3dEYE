@@ -17,10 +17,10 @@ public class FileGeneratorFactory(ILogger logger)
     public IFileGenerator CreateOptimizedGenerator(int bufferSize = 1024 * 1024, int batchSize = 1000) 
         => new OptimizedFileGenerator(logger, SampleStrings, bufferSize, batchSize);
 
-    public IFileGenerator CreateParallelGenerator(int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0) 
-        => new ParallelFileGenerator(logger, SampleStrings, chunkSize, maxDegreeOfParallelism);
+    public IFileGenerator CreateParallelGenerator(string outputFilePath, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0) 
+        => new ParallelFileGenerator(logger, SampleStrings, outputFilePath, chunkSize, maxDegreeOfParallelism);
 
-    public IFileGenerator CreateGeneratorForFileSize(long fileSizeInBytes)
+    public IFileGenerator CreateGeneratorForFileSize(long fileSizeInBytes, string outputFilePath)
     {
         const long oneGb = 1024L * 1024 * 1024;
         const long tenGb = 10L * oneGb;
@@ -35,10 +35,10 @@ public class FileGeneratorFactory(ILogger logger)
                 return CreateOptimizedGenerator(4 * 1024 * 1024, 2000); // 4MB buffer, 2000 batch size
             case < hundredGb:
                 logger.LogInformation("File size {FileSize} bytes (10-100GB), using parallel FileGenerator", fileSizeInBytes);
-                return CreateParallelGenerator(200 * 1024 * 1024, 4); // 200MB chunks, 4 threads
+                return CreateParallelGenerator(outputFilePath, 200 * 1024 * 1024, 4); // 200MB chunks, 4 threads
             default:
                 logger.LogInformation("File size {FileSize} bytes (> 100GB), using ultra-large parallel FileGenerator", fileSizeInBytes);
-                return CreateParallelGenerator(500 * 1024 * 1024, 8); // 500MB chunks, 8 threads
+                return CreateParallelGenerator(outputFilePath, 500 * 1024 * 1024, 8); // 500MB chunks, 8 threads
         }
     }
 }

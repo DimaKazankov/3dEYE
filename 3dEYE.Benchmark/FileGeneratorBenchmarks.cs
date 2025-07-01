@@ -33,8 +33,8 @@ public class FileGeneratorBenchmarks
         
         _originalGenerator = fileGeneratorFactory.CreateBasicGenerator();
         _optimizedGenerator = fileGeneratorFactory.CreateOptimizedGenerator();
-        _parallelGenerator = fileGeneratorFactory.CreateParallelGenerator();
-        _largeParallelGenerator = fileGeneratorFactory.CreateParallelGenerator(200 * 1024 * 1024, 4);
+        _parallelGenerator = fileGeneratorFactory.CreateParallelGenerator(Path.GetTempFileName());
+        _largeParallelGenerator = fileGeneratorFactory.CreateParallelGenerator(Path.GetTempFileName(), 200 * 1024 * 1024, 4);
     }
 
     [Benchmark]

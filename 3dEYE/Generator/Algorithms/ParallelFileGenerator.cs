@@ -12,8 +12,9 @@ public class ParallelFileGenerator : IFileGenerator
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
     private readonly char[] _lineBuffer;
+    private readonly string _outputFilePath;
 
-    public ParallelFileGenerator(ILogger logger, string[] input, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
+    public ParallelFileGenerator(ILogger logger, string[] input, string outputFilePath, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
     {
         if (input.Length == 0)
             throw new ArgumentException("Input strings array cannot be null or empty");
@@ -28,6 +29,7 @@ public class ParallelFileGenerator : IFileGenerator
         _chunkSize = chunkSize;
         _maxDegreeOfParallelism = maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
         _lineBuffer = new char[256];
+        _outputFilePath = outputFilePath;
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -86,7 +88,9 @@ public class ParallelFileGenerator : IFileGenerator
 
     private async Task<string> GenerateChunkAsync(int chunkIndex, long chunkSize, long globalOffset)
     {
-        var tempFilePath = Path.Combine(Path.GetTempPath(), $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
+        // Use the same directory as the output file instead of /tmp to avoid disk space issues
+        var outputDir = Path.GetDirectoryName(_outputFilePath) ?? Path.GetTempPath();
+        var tempFilePath = Path.Combine(outputDir, $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
         long currentSize = 0;
 
         await using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous);
