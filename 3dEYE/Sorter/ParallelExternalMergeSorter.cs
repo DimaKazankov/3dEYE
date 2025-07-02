@@ -425,13 +425,19 @@ public class ParallelExternalMergeSorter(
 
     private int CalculateOptimalChunkSize(int bufferSize, long totalLines, int threadCount)
     {
+        // For very small files, use a smaller chunk size to ensure we create at least one chunk
+        if (totalLines <= 10)
+        {
+            return Math.Max(1, (int)totalLines);
+        }
+        
         // Calculate optimal chunk size based on available memory and thread count
         // We want to ensure each thread has enough work but not too much to cause memory pressure
-        var baseChunkSize = Math.Max(1000, bufferSize / 200); // At least 1000 lines per chunk
+        var baseChunkSize = Math.Max(100, bufferSize / 200); // At least 100 lines per chunk (reduced from 1000)
         var optimalChunkSize = Math.Max(baseChunkSize, (int)(totalLines / (threadCount * 2))); // Ensure at least 2 chunks per thread
         
-        // Cap the chunk size to prevent memory issues
-        var maxChunkSize = bufferSize / 100; // Conservative estimate
+        // Cap the chunk size to prevent memory issues and ensure we don't exceed total lines
+        var maxChunkSize = Math.Min(bufferSize / 100, (int)totalLines); // Conservative estimate, but don't exceed total lines
         return Math.Min(optimalChunkSize, maxChunkSize);
     }
 
@@ -442,11 +448,14 @@ public class ParallelExternalMergeSorter(
         var bufferSize = Math.Max((int)requestedBufferSize, minBufferSize);
 
         // Ensure maximum buffer size (don't use more than 10% of file size or 100MB)
-        var maxBufferSize = Math.Min(fileSize / 10, 100 * 1024 * 1024);
+        var maxBufferSize = Math.Max(fileSize / 10, minBufferSize); // At least minBufferSize
         bufferSize = Math.Min(bufferSize, (int)maxBufferSize);
 
         // Round to nearest power of 2 for better performance
         bufferSize = (int)Math.Pow(2, Math.Ceiling(Math.Log2(bufferSize)));
+
+        // Final safety check: ensure buffer size is never 0
+        bufferSize = Math.Max(bufferSize, minBufferSize);
 
         logger.LogDebug("Adjusted buffer size from {Requested} to {Adjusted} bytes", 
             requestedBufferSize, bufferSize);

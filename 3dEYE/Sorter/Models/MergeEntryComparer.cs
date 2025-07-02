@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace _3dEYE.Sorter.Models;
 
-internal sealed class MergeEntryComparer : IComparer<MergeEntry>
+public sealed class MergeEntryComparer : IComparer<MergeEntry>
 {
     public static readonly MergeEntryComparer Instance = new();
 

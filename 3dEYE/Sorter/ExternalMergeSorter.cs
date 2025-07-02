@@ -140,12 +140,15 @@ public class ExternalMergeSorter(
             ? Math.Min(fileSize / 50, 25 * 1024 * 1024) // 2% of file size or 25MB
             : fileSize > 50L * 1024 * 1024 * 1024 // 50GB
             ? Math.Min(fileSize / 20, 50 * 1024 * 1024) // 5% of file size or 50MB
-            : Math.Min(fileSize / 10, 100 * 1024 * 1024); // 10% of file size or 100MB
+            : Math.Max(fileSize / 10, minBufferSize); // 10% of file size, but at least minBufferSize
         
         bufferSize = Math.Min(bufferSize, (int)maxBufferSize);
 
         // Round to nearest power of 2 for better performance
         bufferSize = (int)Math.Pow(2, Math.Ceiling(Math.Log2(bufferSize)));
+
+        // Final safety check: ensure buffer size is never 0
+        bufferSize = Math.Max(bufferSize, minBufferSize);
 
         logger.LogDebug("Adjusted buffer size from {Requested} to {Adjusted} bytes for file size {FileSize}", 
             requestedBufferSize, bufferSize, fileSize);

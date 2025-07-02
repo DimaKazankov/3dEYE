@@ -63,6 +63,15 @@ public class StreamingSorter(
         IComparer<LineData> comparer,
         CancellationToken cancellationToken)
     {
+        // Check if input file is empty
+        var fileInfo = new FileInfo(inputFilePath);
+        if (fileInfo.Length == 0)
+        {
+            // Create empty output file
+            await File.WriteAllTextAsync(outputFilePath, "", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         // Create temporary file for intermediate results
         var tempFile = Path.GetTempFileName();
         
