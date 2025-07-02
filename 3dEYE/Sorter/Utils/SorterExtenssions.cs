@@ -1,8 +1,9 @@
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Text;
+using _3dEYE.Sorter.Models;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Utils;
 
 internal static class SorterExtensions
 {

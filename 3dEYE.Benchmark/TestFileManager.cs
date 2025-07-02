@@ -19,10 +19,10 @@ public class TestFileManager<T> : IDisposable
 
         InputFile = Path.Combine(_testDirectory, "input.txt");
         OutputFile = Path.Combine(_testDirectory, "output.txt");
-        Logger = CreateLogger<T>();
+        Logger = CreateLogger();
     }
     
-    private ILogger<T> CreateLogger<T>()
+    private ILogger<T> CreateLogger()
     {
         var loggerFactory = LoggerFactory.Create(builder =>
         {

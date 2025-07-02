@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Models;
 
 internal sealed class MergeEntryComparer : IComparer<MergeEntry>
 {

@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3dEYE.Tests", "3dEYE.Tests\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3dEYE.Benchmark", "3dEYE.Benchmark\3dEYE.Benchmark.csproj", "{920475E9-D833-4431-8648-02F7B9B88FEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3dEYE.Sorter", "3dEYE.Sorter\3dEYE.Sorter.csproj", "{4F63DFDD-0680-4090-BE05-B898B9FC4407}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +24,5 @@ Global
 		{920475E9-D833-4431-8648-02F7B9B88FEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{920475E9-D833-4431-8648-02F7B9B88FEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{920475E9-D833-4431-8648-02F7B9B88FEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4F63DFDD-0680-4090-BE05-B898B9FC4407}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4F63DFDD-0680-4090-BE05-B898B9FC4407}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4F63DFDD-0680-4090-BE05-B898B9FC4407}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4F63DFDD-0680-4090-BE05-B898B9FC4407}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

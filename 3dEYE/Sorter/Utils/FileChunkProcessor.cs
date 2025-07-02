@@ -1,8 +1,9 @@
 using System.Buffers;
 using System.Globalization;
 using System.IO.Pipelines;
+using _3dEYE.Sorter.Models;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Utils;
 
 internal class FileChunkProcessor
 {

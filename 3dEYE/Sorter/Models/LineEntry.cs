@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Models;
 
 /// <summary>Immutable view over one input line during the split phase.</summary>
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Models;
 
 /// <summary>Queue element used during k‑way merge.</summary>
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -30,7 +30,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\3dEYE.Sorter\3dEYE.Sorter.csproj" />
       <ProjectReference Include="..\3dEYE\3dEYE.csproj" />
     </ItemGroup>
 

@@ -1,7 +1,7 @@
 using System.Text;
 using _3dEYE.Sorter.Models;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Utils;
 
 public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? comparer = null)
 {

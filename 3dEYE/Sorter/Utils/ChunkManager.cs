@@ -2,7 +2,7 @@ using System.Text;
 using _3dEYE.Sorter.Models;
 using Microsoft.Extensions.Logging;
 
-namespace _3dEYE.Sorter;
+namespace _3dEYE.Sorter.Utils;
 
 public class ChunkManager(int bufferSize = 1024 * 1024)
 {

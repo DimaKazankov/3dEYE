@@ -16,7 +16,6 @@
 
     <ItemGroup>
         <ProjectReference Include="../3dEYE/3dEYE.csproj" />
-        <ProjectReference Include="..\3dEYE.Sorter\3dEYE.Sorter.csproj" />
     </ItemGroup>
 
     <ItemGroup>
