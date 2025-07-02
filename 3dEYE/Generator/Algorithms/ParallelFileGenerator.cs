@@ -88,9 +88,9 @@ public class ParallelFileGenerator : IFileGenerator
 
     private async Task<string> GenerateChunkAsync(int chunkIndex, long chunkSize, long globalOffset)
     {
-        // Use the same directory as the output file instead of /tmp to avoid disk space issues
-        var outputDir = Path.GetDirectoryName(_outputFilePath) ?? Path.GetTempPath();
-        var tempFilePath = Path.Combine(outputDir, $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
+        // Use the system temp directory to avoid directory existence issues
+        var tempDir = Path.GetTempPath();
+        var tempFilePath = Path.Combine(tempDir, $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
         long currentSize = 0;
 
         await using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous);

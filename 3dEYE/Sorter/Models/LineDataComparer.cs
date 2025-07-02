@@ -2,6 +2,7 @@ using System.Globalization;
 
 namespace _3dEYE.Sorter.Models;
 
+// todo. to work on edge cases
 public class LineDataComparer : IComparer<LineData>
 {
     public int Compare(LineData x, LineData y)

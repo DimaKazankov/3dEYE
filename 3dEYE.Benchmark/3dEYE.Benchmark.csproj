@@ -18,8 +18,4 @@
         <ProjectReference Include="../3dEYE/3dEYE.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="BenchmarkDotNet.Artifacts\results\" />
-    </ItemGroup>
-
 </Project>

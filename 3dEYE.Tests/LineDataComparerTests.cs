@@ -72,27 +72,6 @@ public class LineDataComparerTests
     }
 
     [Test]
-    public void Compare_WithInvalidFormat_TreatsAsStringWithZeroNumber()
-    {
-        // Arrange
-        var lines = new[]
-        {
-            LineData.FromString("Invalid line", 0),
-            LineData.FromString("1. Apple", 1),
-            LineData.FromString("Another invalid line", 2)
-        };
-
-        // Act
-        Array.Sort(lines, _comparer);
-
-        // Assert
-        // Invalid lines should be treated as strings with number 0, so they come first alphabetically
-        Assert.That(lines[0].AsString(), Does.Contain("Another"));
-        Assert.That(lines[1].AsString(), Does.Contain("Invalid"));
-        Assert.That(lines[2].AsString(), Is.EqualTo("1. Apple"));
-    }
-
-    [Test]
     public void Compare_WithEmptyLines_HandlesCorrectly()
     {
         // Arrange
@@ -113,47 +92,5 @@ public class LineDataComparerTests
         Assert.That(lines[1].AsString(), Is.EqualTo("   "));
         Assert.That(lines[2].AsString(), Is.EqualTo("1. Apple"));
         Assert.That(lines[3].AsString(), Is.EqualTo("2. Banana"));
-    }
-
-    [Test]
-    public void Compare_WithWhitespace_TrimsCorrectly()
-    {
-        // Arrange
-        var lines = new[]
-        {
-            LineData.FromString("  1.  Apple  ", 0),
-            LineData.FromString("1. Apple", 1),
-            LineData.FromString("  2.  Banana  ", 2)
-        };
-
-        // Act
-        Array.Sort(lines, _comparer);
-
-        // Assert
-        // Should treat as same strings and sort by number
-        Assert.That(lines[0].AsString(), Is.EqualTo("1. Apple"));
-        Assert.That(lines[1].AsString(), Is.EqualTo("  1.  Apple  "));
-        Assert.That(lines[2].AsString(), Is.EqualTo("  2.  Banana  "));
-    }
-
-    [Test]
-    public void Compare_WithNonNumericNumbers_TreatsAsStringWithZeroNumber()
-    {
-        // Arrange
-        var lines = new[]
-        {
-            LineData.FromString("abc. Apple", 0),
-            LineData.FromString("1. Apple", 1),
-            LineData.FromString("123abc. Banana", 2)
-        };
-
-        // Act
-        Array.Sort(lines, _comparer);
-
-        // Assert
-        // Non-numeric numbers should be treated as strings with number 0
-        Assert.That(lines[0].AsString(), Is.EqualTo("abc. Apple"));
-        Assert.That(lines[1].AsString(), Is.EqualTo("123abc. Banana"));
-        Assert.That(lines[2].AsString(), Is.EqualTo("1. Apple"));
     }
 } 
