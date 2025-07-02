@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using _3dEYE.Sorter;
 using _3dEYE.Sorter.Models;
-using NUnit.Framework;
 using Moq;
 
 namespace _3dEYE.Tests;

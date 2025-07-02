@@ -176,30 +176,4 @@ public class ExternalMergeSorter(
             logger.LogWarning("Could not validate disk space: {Message}", ex.Message);
         }
     }
-
-    public Task<SortStatistics> GetSortStatisticsAsync(
-        string inputFilePath, 
-        long bufferSizeBytes)
-    {
-        if (!File.Exists(inputFilePath))
-            throw new FileNotFoundException($"Input file not found: {inputFilePath}");
-
-        var fileInfo = new FileInfo(inputFilePath);
-        var bufferSize = ValidateAndAdjustBufferSize(bufferSizeBytes, fileInfo.Length);
-        
-        var chunkManager = new ChunkManager(bufferSize);
-        var estimatedChunks = chunkManager.EstimateChunkCount(fileInfo.Length);
-        var estimatedPasses = MergeManager.EstimateMergePasses(estimatedChunks);
-
-        var statistics = new SortStatistics
-        {
-            FileSizeBytes = fileInfo.Length,
-            BufferSizeBytes = bufferSize,
-            EstimatedChunks = estimatedChunks,
-            EstimatedMergePasses = estimatedPasses,
-            EstimatedTotalIOPerFile = estimatedPasses * 2 + 1 // Read + Write per pass + initial read
-        };
-
-        return Task.FromResult(statistics);
-    }
 }

@@ -476,29 +476,4 @@ public class ParallelExternalMergeSorter(
             }
         }
     }
-
-    public Task<SortStatistics> GetSortStatisticsAsync(
-        string inputFilePath, 
-        long bufferSizeBytes)
-    {
-        var fileInfo = new FileInfo(inputFilePath);
-        var bufferSize = ValidateAndAdjustBufferSize(bufferSizeBytes, fileInfo.Length);
-        
-        // Estimate chunks based on parallel processing
-        var estimatedTotalLines = fileInfo.Length / 200; // Rough estimate
-        var optimalChunkSize = CalculateOptimalChunkSize(bufferSize, estimatedTotalLines, _maxDegreeOfParallelism);
-        var estimatedChunks = (int)Math.Ceiling((double)estimatedTotalLines / optimalChunkSize);
-        var estimatedPasses = EstimateMergePasses(estimatedChunks);
-
-        var statistics = new SortStatistics
-        {
-            FileSizeBytes = fileInfo.Length,
-            BufferSizeBytes = bufferSize,
-            EstimatedChunks = estimatedChunks,
-            EstimatedMergePasses = estimatedPasses,
-            EstimatedTotalIOPerFile = estimatedPasses * 2 + 1 // Read + Write per pass + initial read
-        };
-
-        return Task.FromResult(statistics);
-    }
 } 

@@ -1,6 +1,4 @@
-using System.Globalization;
-using _3dEYE.Sorter;
-using NUnit.Framework;
+using _3dEYE.Sorter; 
 
 namespace _3dEYE.Tests;
 
@@ -234,7 +232,7 @@ public class ThreeDEyeSorterTests : IDisposable
         
         // Generate 1000 lines with random numbers and predefined strings
         var strings = new[] { "Apple", "Banana", "Cherry", "Date", "Elderberry" };
-        for (int i = 0; i < 1000; i++)
+        for (var i = 0; i < 1000; i++)
         {
             var number = random.Next(1, 10000);
             var text = strings[random.Next(strings.Length)];

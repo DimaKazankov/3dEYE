@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Text;
 using _3dEYE.Sorter.Models;
 
@@ -6,7 +5,6 @@ namespace _3dEYE.Sorter;
 
 public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? comparer = null)
 {
-    private readonly ArrayPool<char> _charPool = ArrayPool<char>.Shared;
     private readonly IComparer<LineData> _comparer = comparer ?? new LineDataComparer();
 
     public async Task MergeChunksAsync(

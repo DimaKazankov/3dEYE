@@ -181,29 +181,4 @@ public class StreamingSorter(
             await writer.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
         }
     }
-
-    public SortStatistics GetSortStatisticsAsync(
-        string inputFilePath, 
-        int bufSize)
-    {
-        if (!File.Exists(inputFilePath))
-            throw new FileNotFoundException($"Input file not found: {inputFilePath}");
-
-        var fileInfo = new FileInfo(inputFilePath);
-        
-        // Estimate lines in file (assume average 100 characters per line)
-        var estimatedLines = fileInfo.Length / 200; // UTF-8 encoding
-        var estimatedBatches = (int)Math.Ceiling((double)estimatedLines / maxMemoryLines);
-        
-        var statistics = new SortStatistics
-        {
-            FileSizeBytes = fileInfo.Length,
-            BufferSizeBytes = bufSize,
-            EstimatedChunks = estimatedBatches,
-            EstimatedMergePasses = 0, // Streaming doesn't use merge passes
-            EstimatedTotalIOPerFile = 2 // Read once, write once
-        };
-
-        return statistics;
-    }
 } 
