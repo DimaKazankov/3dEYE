@@ -4,10 +4,9 @@ using System.IO.Pipelines;
 
 namespace _3dEYE.Sorter;
 
-internal static class SplitSortWorker
+internal class FileChunkProcessor
 {
-
-    public static async Task<IReadOnlyList<string>> SplitIntoRunsAsync(
+    public async Task<IReadOnlyList<string>> SplitToChunksAsync(
         string inputPath,
         string tempDir,
         int chunkChars = 32 * 1024 * 1024,

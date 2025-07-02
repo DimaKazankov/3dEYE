@@ -13,9 +13,9 @@ internal static class SorterExtensions
         var written = 0;
         while (written < dest.Length)
         {
-            var rr = await reader.ReadAsync();
-            var seq = rr.Buffer;
-            if (seq.IsEmpty && rr.IsCompleted) break;
+            var result = await reader.ReadAsync();
+            var seq = result.Buffer;
+            if (seq.IsEmpty && result.IsCompleted) break;
 
             var consumed = seq.Start;
             while (seq.Length > 0 && written < dest.Length)
@@ -23,7 +23,7 @@ internal static class SorterExtensions
                 var bytes = seq.FirstSpan;
                 var chars = dest.Span.Slice(written);
 
-                Utf8Decoder.Convert(bytes, chars, flush: rr.IsCompleted, out var bytesUsed, out var charsUsed, out _);
+                Utf8Decoder.Convert(bytes, chars, flush: result.IsCompleted, out var bytesUsed, out var charsUsed, out _);
 
                 written += charsUsed;
                 consumed = seq.GetPosition(bytesUsed, consumed);
@@ -31,7 +31,7 @@ internal static class SorterExtensions
             }
 
             reader.AdvanceTo(consumed);
-            if (rr.IsCompleted || written == dest.Length) break;
+            if (result.IsCompleted || written == dest.Length) break;
         }
 
         return written;

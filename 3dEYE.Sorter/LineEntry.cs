@@ -7,9 +7,9 @@ namespace _3dEYE.Sorter;
 internal readonly struct LineEntry(ReadOnlyMemory<char> full, ReadOnlyMemory<char> key, int number)
     : IComparable<LineEntry>
 {
-    public readonly ReadOnlyMemory<char> FullLine = full; // "<num>. <text>\n"
-    public readonly ReadOnlyMemory<char> KeyText = key;  // "<text>"
-    public readonly int Number = number;
+    public ReadOnlyMemory<char> FullLine { get; } = full;
+    public ReadOnlyMemory<char> KeyText { get; } = key;  // "<text>"
+    public int Number { get; } = number;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(LineEntry other)

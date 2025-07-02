@@ -3,13 +3,15 @@ using System.Text;
 
 namespace _3dEYE.Sorter;
 
-internal static class KWayMergeRunner
+internal class KWaySortMerger(IComparer<MergeEntry>? comparer)
 {
-    public static async Task MergeRunsAsync(IEnumerable<string> runPaths, string outputPath, bool tolerant = true)
+    private readonly IComparer<MergeEntry> _comparer = comparer ?? MergeEntryComparer.Instance;
+
+    public async Task MergeAsync(IEnumerable<string> runPaths, string outputPath, bool tolerant = true)
     {
         // open all run streams
         var readers = runPaths.Select(p => new StreamReader(p, Encoding.UTF8, false, 1 << 16)).ToList();
-        var priorityQueue = new PriorityQueue<MergeEntry, MergeEntry>(MergeEntryComparer.Instance);
+        var priorityQueue = new PriorityQueue<MergeEntry, MergeEntry>(_comparer);
 
         for (var i = 0; i < readers.Count; i++)
             if (!await TryEnqueueAsync(readers[i], i, priorityQueue, tolerant))
