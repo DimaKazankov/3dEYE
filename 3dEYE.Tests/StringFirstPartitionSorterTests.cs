@@ -76,7 +76,7 @@ public class StringFirstPartitionSorterTests : IDisposable
         var testData = new List<string>();
         var random = new Random(42);
         
-        for (int i = 1; i <= 10000; i++)
+        for (var i = 1; i <= 10000; i++)
         {
             var word = words[random.Next(words.Length)];
             testData.Add($"{i}. {word}");
@@ -178,7 +178,7 @@ public class StringFirstPartitionSorterTests : IDisposable
 
     private bool IsSorted(string[] lines, IComparer<LineData> comparer)
     {
-        for (int i = 0; i < lines.Length - 1; i++)
+        for (var i = 0; i < lines.Length - 1; i++)
         {
             var line1 = LineData.FromString(lines[i], i);
             var line2 = LineData.FromString(lines[i + 1], i + 1);

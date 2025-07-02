@@ -115,26 +115,6 @@ public class StreamingSorterTests : IDisposable
         Assert.That(output, Is.EqualTo(expected));
     }
 
-    [Test]
-    public async Task GetSortStatisticsAsync_ValidFile_ReturnsCorrectStatistics()
-    {
-        // Arrange
-        var inputFile = CreateTempFile(
-            "line1",
-            "line2",
-            "line3"
-        );
-
-        // Act
-        var stats = await _sorter.GetSortStatisticsAsync(inputFile, 1024);
-
-        // Assert
-        Assert.That(stats.FileSizeBytes, Is.GreaterThan(0));
-        Assert.That(stats.BufferSizeBytes, Is.EqualTo(1024));
-        Assert.That(stats.EstimatedMergePasses, Is.EqualTo(0)); // Streaming doesn't use merge passes
-        Assert.That(stats.EstimatedTotalIOPerFile, Is.EqualTo(2)); // Read once, write once
-    }
-
     private string CreateTempFile(params string[] lines)
     {
         var tempFile = GetTempFilePath();

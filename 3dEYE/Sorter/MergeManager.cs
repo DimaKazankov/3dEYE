@@ -34,7 +34,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
             var nextChunks = new List<string>();
             var batchSize = Math.Min(10, currentChunks.Count); // Merge up to 10 chunks at once
 
-            for (int i = 0; i < currentChunks.Count; i += batchSize)
+            for (var i = 0; i < currentChunks.Count; i += batchSize)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -97,7 +97,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
                 var minIndex = -1;
                 LineData? minLine = null;
 
-                for (int i = 0; i < currentLines.Count; i++)
+                for (var i = 0; i < currentLines.Count; i++)
                 {
                     if (currentLines[i] == null) continue;
 

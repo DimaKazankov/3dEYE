@@ -182,7 +182,7 @@ public class StreamingSorter(
         }
     }
 
-    public Task<SortStatistics> GetSortStatisticsAsync(
+    public SortStatistics GetSortStatisticsAsync(
         string inputFilePath, 
         int bufSize)
     {
@@ -204,6 +204,6 @@ public class StreamingSorter(
             EstimatedTotalIOPerFile = 2 // Read once, write once
         };
 
-        return Task.FromResult(statistics);
+        return statistics;
     }
 } 

@@ -35,15 +35,21 @@ public class Program
             // logger.LogInformation("Results saved to: {ResultsPath}", streamingSummary.ResultsDirectoryPath);
 
             // Run String First Partition Sorter benchmarks
-            var stringPartitionSummary = BenchmarkRunner.Run<OptimizedStringFirstPartitionSorterBenchmarks>();
-            logger.LogInformation("OptimizedStringFirstPartitionSorterBenchmarks benchmarks completed!");
-            logger.LogInformation("Results saved to: {ResultsPath}", stringPartitionSummary.ResultsDirectoryPath);
+            // var stringPartitionSummary = BenchmarkRunner.Run<StreamingSorterBenchmarks>();
+            // logger.LogInformation("StreamingSorterBenchmarks benchmarks completed!");
+            // logger.LogInformation("Results saved to: {ResultsPath}", stringPartitionSummary.ResultsDirectoryPath);
+            
+            
+            var stringPartitionSummary2 = BenchmarkRunner.Run<NewStreamingSorterBenchmarks>();
+            logger.LogInformation("NewStreamingSorterBenchmarks benchmarks completed!");
+            logger.LogInformation("Results saved to: {ResultsPath}", stringPartitionSummary2.ResultsDirectoryPath);
 
             logger.LogInformation("=== ALL BENCHMARK RESULTS ===");
             // DisplayBenchmarkResults(externalMergeSummary, logger, "ExternalMergeSorter");
             // DisplayBenchmarkResults(parallelMergeSummary, logger, "ParallelExternalMergeSorter");
             // DisplayBenchmarkResults(streamingSummary, logger, "StreamingSorter");
-            DisplayBenchmarkResults(stringPartitionSummary, logger, "OptimizedStringFirstPartitionSorterBenchmarks");
+            // DisplayBenchmarkResults(stringPartitionSummary, logger, "StreamingSorterBenchmarks");
+            DisplayBenchmarkResults(stringPartitionSummary2, logger, "NewStreamingSorterBenchmarks");
         }
         catch (Exception ex)
         {

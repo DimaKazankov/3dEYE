@@ -260,7 +260,7 @@ public class ParallelExternalMergeSorter(
             // Process chunks in pairs for merging
             var mergeTasks = new List<Task>();
             
-            for (int i = 0; i < currentChunks.Count; i += 2)
+            for (var i = 0; i < currentChunks.Count; i += 2)
             {
                 if (i + 1 < currentChunks.Count)
                 {

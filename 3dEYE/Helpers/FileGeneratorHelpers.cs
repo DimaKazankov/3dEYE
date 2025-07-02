@@ -105,7 +105,7 @@ public static class FileGeneratorHelpers
     public static ReadOnlyMemory<char>[] ConvertToReadOnlyMemoryArray(string[] input)
     {
         var result = new ReadOnlyMemory<char>[input.Length];
-        for (int i = 0; i < input.Length; i++)
+        for (var i = 0; i < input.Length; i++)
         {
             result[i] = input[i].AsMemory();
         }

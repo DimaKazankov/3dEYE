@@ -9,14 +9,14 @@ namespace _3dEYE.Benchmark;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90, warmupCount: 1, iterationCount: 1)]
-public class StreamingSorterBenchmarks
+public class NewStreamingSorterBenchmarks
 {
     private string _testDirectory = null!;
     private string _inputFile = null!;
     private string _outputFile = null!;
-    private StreamingSorter _sorter = null!;
+    private ThreeDEyeSorter _sorter = null!;
     private ILogger<StreamingSorter> _logger = null!;
-
+    
     [GlobalSetup]
     public async Task Setup()
     {
@@ -38,7 +38,7 @@ public class StreamingSorterBenchmarks
         await GenerateTestFile(_inputFile, 1024 * 1024 * 1024);
 
         // Initialize sorter
-        _sorter = new StreamingSorter(_logger, bufferSize: 10 * 1024 * 1024);
+        _sorter = new ThreeDEyeSorter();
     }
 
     [GlobalCleanup]
@@ -60,7 +60,7 @@ public class StreamingSorterBenchmarks
     public async Task Sort()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-        await _sorter.SortAsync(_inputFile, _outputFile, new LineDataComparer(), cancellationToken: cts.Token);
+        await _sorter.SortAsync(_inputFile, _outputFile, _testDirectory);
     }
 
     private async Task GenerateTestFile(string filePath, int targetSizeBytes)
