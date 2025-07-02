@@ -20,35 +20,28 @@ public class Program
             logger.LogInformation("Starting comprehensive sorter benchmarks...");
             
             // Run External Merge Sorter benchmarks
-            // var externalMergeSummary = BenchmarkRunner.Run<ExternalMergeSorterBenchmarks>();
-            // logger.LogInformation("ExternalMergeSorter benchmarks completed!");
-            // logger.LogInformation("Results saved to: {ResultsPath}", externalMergeSummary.ResultsDirectoryPath);
-            //
-            // // Run Parallel External Merge Sorter benchmarks
-            // var parallelMergeSummary = BenchmarkRunner.Run<ParallelExternalMergeSorterBenchmarks>();
-            // logger.LogInformation("ParallelExternalMergeSorter benchmarks completed!");
-            // logger.LogInformation("Results saved to: {ResultsPath}", parallelMergeSummary.ResultsDirectoryPath);
-            //
-            // // Run Streaming Sorter benchmarks
-            // var streamingSummary = BenchmarkRunner.Run<StreamingSorterBenchmarks>();
-            // logger.LogInformation("StreamingSorter benchmarks completed!");
-            // logger.LogInformation("Results saved to: {ResultsPath}", streamingSummary.ResultsDirectoryPath);
-
-            // Run String First Partition Sorter benchmarks
-            // var stringPartitionSummary = BenchmarkRunner.Run<StreamingSorterBenchmarks>();
-            // logger.LogInformation("StreamingSorterBenchmarks benchmarks completed!");
-            // logger.LogInformation("Results saved to: {ResultsPath}", stringPartitionSummary.ResultsDirectoryPath);
+            var externalMergeSummary = BenchmarkRunner.Run<ExternalMergeSorterBenchmarks>();
+            logger.LogInformation("ExternalMergeSorter benchmarks completed!");
+            logger.LogInformation("Results saved to: {ResultsPath}", externalMergeSummary.ResultsDirectoryPath);
             
+            // // Run Parallel External Merge Sorter benchmarks
+            var parallelMergeSummary = BenchmarkRunner.Run<ParallelExternalMergeSorterBenchmarks>();
+            logger.LogInformation("ParallelExternalMergeSorter benchmarks completed!");
+            logger.LogInformation("Results saved to: {ResultsPath}", parallelMergeSummary.ResultsDirectoryPath);
+            
+            // // Run Streaming Sorter benchmarks
+            var streamingSummary = BenchmarkRunner.Run<StreamingSorterBenchmarks>();
+            logger.LogInformation("StreamingSorter benchmarks completed!");
+            logger.LogInformation("Results saved to: {ResultsPath}", streamingSummary.ResultsDirectoryPath);
             
             var stringPartitionSummary2 = BenchmarkRunner.Run<NewStreamingSorterBenchmarks>();
             logger.LogInformation("NewStreamingSorterBenchmarks benchmarks completed!");
             logger.LogInformation("Results saved to: {ResultsPath}", stringPartitionSummary2.ResultsDirectoryPath);
 
             logger.LogInformation("=== ALL BENCHMARK RESULTS ===");
-            // DisplayBenchmarkResults(externalMergeSummary, logger, "ExternalMergeSorter");
-            // DisplayBenchmarkResults(parallelMergeSummary, logger, "ParallelExternalMergeSorter");
-            // DisplayBenchmarkResults(streamingSummary, logger, "StreamingSorter");
-            // DisplayBenchmarkResults(stringPartitionSummary, logger, "StreamingSorterBenchmarks");
+            DisplayBenchmarkResults(externalMergeSummary, logger, "ExternalMergeSorter");
+            DisplayBenchmarkResults(parallelMergeSummary, logger, "ParallelExternalMergeSorter");
+            DisplayBenchmarkResults(streamingSummary, logger, "StreamingSorter");
             DisplayBenchmarkResults(stringPartitionSummary2, logger, "NewStreamingSorterBenchmarks");
         }
         catch (Exception ex)
