@@ -6,7 +6,7 @@ namespace _3dEYE.Benchmark;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90, warmupCount: 1, iterationCount: 1)]
-public class NewStreamingSorterBenchmarks
+public class ThreeDEyeSorterBenchmarks
 {
     private TestFileManager<ThreeDEyeSorter> _fileManager = null!;
     private ThreeDEyeSorter _sorter = null!;
@@ -15,7 +15,8 @@ public class NewStreamingSorterBenchmarks
     public async Task Setup()
     {
         _fileManager = new TestFileManager<ThreeDEyeSorter>("ThreeDEyeSorterBenchmark");
-        await _fileManager.InputFile.GenerateTestFile(_fileManager.Logger);
+        var targetSizeBytes = 10L * 1024 * 1024 * 1024;
+        await _fileManager.InputFile.GenerateTestFile(_fileManager.Logger, targetSizeBytes: targetSizeBytes);
         _sorter = new ThreeDEyeSorter();
     }
 
