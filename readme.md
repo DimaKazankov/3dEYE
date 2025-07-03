@@ -2,7 +2,7 @@
 
 ## 🏆 WINNERS ANNOUNCEMENT
 
-### **Sorter Winner: ThreeDEyeSorter (NewStreamingSorter)**
+### **Sorter Winner: ThreeDEyeSorter**
 ### **Generator Winner: ThreeDEyeFilesGenerator**
 
 ---
