@@ -42,7 +42,7 @@ internal class FileChunkProcessor
                 while (pos < chunk.Length)
                 {
                     var lf = chunk.Slice(pos).IndexOf('\n');
-                    if (lf < 0) break; // safety
+                    if (lf < 0) break;
                     var line = chunk.Slice(pos, lf);
                     pos += lf + 1;
 

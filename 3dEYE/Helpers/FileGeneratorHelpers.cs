@@ -12,15 +12,12 @@ public static class FileGeneratorHelpers
     {
         var numberStr = number.ToString();
         
-        // Copy number
         numberStr.CopyTo(buffer);
         var currentPos = numberStr.Length;
         
-        // Copy separator
         Separator.CopyTo(buffer.Slice(currentPos));
         currentPos += Separator.Length;
         
-        // Copy string using ReadOnlyMemory<char>
         str.Span.CopyTo(buffer.Slice(currentPos));
         currentPos += str.Length;
         
@@ -50,7 +47,6 @@ public static class FileGeneratorHelpers
         var number = Random.Shared.Next(1, 1000000) + (int)(globalOffset / 50);
         
         var lineLength = FormatLine(lineBuffer, number, input[Random.Shared.Next(input.Length)]);
-        // Create a copy of the buffer content to prevent buffer reuse issues
         var bufferCopy = new char[lineLength];
         Array.Copy(lineBuffer, 0, bufferCopy, 0, lineLength);
         return new ReadOnlyMemory<char>(bufferCopy);

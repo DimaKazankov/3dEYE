@@ -40,10 +40,8 @@ public class ParallelExternalMergeSorter(
         logger.LogInformation("Starting parallel external merge sort for file: {FilePath} ({Size} bytes) with {ThreadCount} threads", 
             inputFilePath, fileInfo.Length, _maxDegreeOfParallelism);
 
-        // Validate buffer size
         var bufferSize = ValidateAndAdjustBufferSize(bufferSizeBytes, fileInfo.Length);
         
-        // Create temporary directory for chunks
         var tempDir = Path.Combine(_tempDirectory, $"parallel_sort_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
 
@@ -64,18 +62,8 @@ public class ParallelExternalMergeSorter(
         }
         finally
         {
-            // Clean up temporary directory
-            try
-            {
-                if (Directory.Exists(tempDir))
-                {
-                    Directory.Delete(tempDir, true);
-                }
-            }
-            catch (Exception cleanupEx)
-            {
-                logger.LogWarning("Failed to clean up temporary directory {TempDir}: {Message}", tempDir, cleanupEx.Message);
-            }
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
         }
     }
 
@@ -87,7 +75,6 @@ public class ParallelExternalMergeSorter(
         IComparer<LineData> comparer,
         CancellationToken cancellationToken)
     {
-        // Phase 1: Split file into chunks and sort them in parallel
         logger.LogInformation("Phase 1: Splitting file into chunks with buffer size {BufferSize} bytes using {ThreadCount} threads", 
             bufferSize, _maxDegreeOfParallelism);
         
@@ -107,7 +94,6 @@ public class ParallelExternalMergeSorter(
             return;
         }
 
-        // Phase 2: Merge chunks into final sorted file (can also be parallel for multiple merge passes)
         logger.LogInformation("Phase 2: Merging {ChunkCount} chunks", chunkFiles.Count);
         
         var estimatedPasses = EstimateMergePasses(chunkFiles.Count);
@@ -115,12 +101,10 @@ public class ParallelExternalMergeSorter(
 
         await MergeChunksParallelAsync(chunkFiles, outputFilePath, bufferSize, comparer, cancellationToken).ConfigureAwait(false);
 
-        // Verify the output
         var outputInfo = new FileInfo(outputFilePath);
         logger.LogInformation("Parallel sort completed. Output file: {OutputPath} ({Size} bytes)", 
             outputFilePath, outputInfo.Length);
 
-        // Clean up chunk files
         CleanupChunks(chunkFiles, logger);
     }
 
@@ -131,48 +115,37 @@ public class ParallelExternalMergeSorter(
         IComparer<LineData> comparer,
         CancellationToken cancellationToken)
     {
-        // First, determine file size and calculate optimal chunk distribution
         var totalLines = await CountLinesAsync(inputFilePath, cancellationToken).ConfigureAwait(false);
-        
-        // Calculate optimal chunk size based on available memory and thread count
         var optimalChunkSize = CalculateOptimalChunkSize(bufferSize, totalLines, _maxDegreeOfParallelism);
         
         logger.LogDebug("File has {TotalLines} lines, using chunk size of {ChunkSize} lines per thread", 
             totalLines, optimalChunkSize);
 
-        // Create a list to hold all chunk file paths
         var chunkFiles = new ConcurrentBag<string>();
-        
-        // Create semaphore to limit concurrent file operations
         using var semaphore = new SemaphoreSlim(_maxDegreeOfParallelism, _maxDegreeOfParallelism);
         
-        // Process chunks in parallel
         var tasks = new List<Task>();
         var chunkIndex = 0;
         
         using var reader = new StreamReader(inputFilePath, Encoding.UTF8, true, bufferSize);
-        
         while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
         {
             // Read a chunk of lines
             var lines = new List<LineData>();
             var linesRead = 0;
-            var currentPosition = 0L;
-            
+
             while (linesRead < optimalChunkSize && !reader.EndOfStream)
             {
                 var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
                 if (line == null) break;
                 
-                var lineData = LineData.FromString(line, currentPosition);
+                var lineData = LineData.FromString(line);
                 lines.Add(lineData);
-                currentPosition = reader.BaseStream.Position;
                 linesRead++;
             }
             
             if (lines.Count == 0) break;
             
-            // Process this chunk in parallel
             var currentChunkIndex = chunkIndex++;
             var task = ProcessChunkParallelAsync(
                 lines, 
@@ -187,7 +160,6 @@ public class ParallelExternalMergeSorter(
             tasks.Add(task);
         }
         
-        // Wait for all chunk processing to complete
         await Task.WhenAll(tasks).ConfigureAwait(false);
         
         return chunkFiles.ToList();
@@ -207,10 +179,8 @@ public class ParallelExternalMergeSorter(
         
         try
         {
-            // Convert LineData to strings for comparison, then sort
             lines.Sort(comparer);
             
-            // Write sorted chunk to file
             var chunkFilePath = Path.Combine(tempDirectory, $"chunk_{chunkIndex:D6}.tmp");
             
             await using var writer = new StreamWriter(chunkFilePath, false, Encoding.UTF8, bufferSize);
@@ -218,7 +188,6 @@ public class ParallelExternalMergeSorter(
             foreach (var lineData in lines)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                // Use lineData.Content (ReadOnlyMemory<char>) for efficient writing, just like the regular sorter
                 await writer.WriteLineAsync(lineData.Content, cancellationToken).ConfigureAwait(false);
             }
             
@@ -241,7 +210,6 @@ public class ParallelExternalMergeSorter(
     {
         if (chunkFiles.Count == 1)
         {
-            // If only one chunk, just copy it to output
             File.Copy(chunkFiles[0], outputFilePath, true);
             return;
         }
@@ -257,14 +225,12 @@ public class ParallelExternalMergeSorter(
             var mergedChunks = new ConcurrentBag<string>();
             var semaphore = new SemaphoreSlim(_maxDegreeOfParallelism, _maxDegreeOfParallelism);
             
-            // Process chunks in pairs for merging
             var mergeTasks = new List<Task>();
             
             for (var i = 0; i < currentChunks.Count; i += 2)
             {
                 if (i + 1 < currentChunks.Count)
                 {
-                    // Merge two chunks
                     var task = MergeTwoChunksAsync(
                         currentChunks[i], 
                         currentChunks[i + 1], 
@@ -280,7 +246,6 @@ public class ParallelExternalMergeSorter(
                 }
                 else
                 {
-                    // Single chunk remaining, just copy it
                     var task = CopySingleChunkAsync(
                         currentChunks[i], 
                         outputFilePath, 
@@ -296,13 +261,10 @@ public class ParallelExternalMergeSorter(
             await Task.WhenAll(mergeTasks).ConfigureAwait(false);
             semaphore.Dispose();
             
-            // Clean up previous pass chunks
             CleanupChunks(currentChunks, logger);
-            
             currentChunks = mergedChunks.ToList();
         }
         
-        // Rename the final chunk to the output file
         if (currentChunks.Count == 1)
         {
             File.Move(currentChunks[0], outputFilePath, true);
@@ -338,8 +300,8 @@ public class ParallelExternalMergeSorter(
             
             while (line1 != null && line2 != null && !cancellationToken.IsCancellationRequested)
             {
-                var lineData1 = LineData.FromString(line1, 0);
-                var lineData2 = LineData.FromString(line2, 0);
+                var lineData1 = LineData.FromString(line1);
+                var lineData2 = LineData.FromString(line2);
                 var comparison = comparer.Compare(lineData1, lineData2); 
                 
                 if (comparison <= 0)
@@ -354,14 +316,12 @@ public class ParallelExternalMergeSorter(
                 }
             }
             
-            // Write remaining lines from chunk1
             while (line1 != null && !cancellationToken.IsCancellationRequested)
             {
                 await writer.WriteLineAsync(line1.AsMemory(), cancellationToken).ConfigureAwait(false);
                 line1 = await reader1.ReadLineAsync(cancellationToken).ConfigureAwait(false);
             }
             
-            // Write remaining lines from chunk2
             while (line2 != null && !cancellationToken.IsCancellationRequested)
             {
                 await writer.WriteLineAsync(line2.AsMemory(), cancellationToken).ConfigureAwait(false);
@@ -425,7 +385,6 @@ public class ParallelExternalMergeSorter(
 
     private int CalculateOptimalChunkSize(int bufferSize, long totalLines, int threadCount)
     {
-        // For very small files, use a smaller chunk size to ensure we create at least one chunk
         if (totalLines <= 10)
         {
             return Math.Max(1, (int)totalLines);
@@ -443,18 +402,13 @@ public class ParallelExternalMergeSorter(
 
     private int ValidateAndAdjustBufferSize(long requestedBufferSize, long fileSize)
     {
-        // Ensure minimum buffer size
         var minBufferSize = 64 * 1024; // 64KB minimum
         var bufferSize = Math.Max((int)requestedBufferSize, minBufferSize);
 
-        // Ensure maximum buffer size (don't use more than 10% of file size or 100MB)
         var maxBufferSize = Math.Max(fileSize / 10, minBufferSize); // At least minBufferSize
         bufferSize = Math.Min(bufferSize, (int)maxBufferSize);
 
-        // Round to nearest power of 2 for better performance
         bufferSize = (int)Math.Pow(2, Math.Ceiling(Math.Log2(bufferSize)));
-
-        // Final safety check: ensure buffer size is never 0
         bufferSize = Math.Max(bufferSize, minBufferSize);
 
         logger.LogDebug("Adjusted buffer size from {Requested} to {Adjusted} bytes", 
@@ -472,17 +426,8 @@ public class ParallelExternalMergeSorter(
     {
         foreach (var chunkFile in chunkFiles)
         {
-            try
-            {
-                if (File.Exists(chunkFile))
-                {
-                    File.Delete(chunkFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Failed to delete chunk file {ChunkFile}: {Message}", chunkFile, ex.Message);
-            }
+            if (File.Exists(chunkFile))
+                File.Delete(chunkFile);
         }
     }
 } 

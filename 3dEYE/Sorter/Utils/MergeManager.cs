@@ -17,12 +17,10 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
 
         if (chunkFiles.Count == 1)
         {
-            // Single chunk, just copy to output
             File.Copy(chunkFiles[0], outputFilePath, true);
             return;
         }
 
-        // Use multi-pass merge for large numbers of chunks
         var currentChunks = new List<string>(chunkFiles);
         var passNumber = 0;
         var tempDirectory = Path.GetDirectoryName(chunkFiles[0]) ?? Path.GetTempPath();
@@ -30,7 +28,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
         while (currentChunks.Count > 1)
         {
             var nextChunks = new List<string>();
-            var batchSize = Math.Min(10, currentChunks.Count); // Merge up to 10 chunks at once
+            var batchSize = Math.Min(10, currentChunks.Count);
 
             for (var i = 0; i < currentChunks.Count; i += batchSize)
             {
@@ -41,21 +39,13 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
                 nextChunks.Add(mergedFile);
             }
 
-            // Clean up intermediate files from previous pass
-            if (passNumber > 0)
-            {
-                CleanupIntermediateFiles(currentChunks);
-            }
+            if (passNumber > 0) CleanupIntermediateFiles(currentChunks);
 
             currentChunks = nextChunks;
             passNumber++;
         }
 
-        // Move final result to output location
-        if (currentChunks.Count == 1)
-        {
-            File.Move(currentChunks[0], outputFilePath, true);
-        }
+        if (currentChunks.Count == 1) File.Move(currentChunks[0], outputFilePath, true);
     }
     
     private async Task<string> MergeBatchAsync(
@@ -70,28 +60,24 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
 
         await using var outputWriter = new StreamWriter(outputFile, false, Encoding.UTF8, bufferSize);
         
-        // Create readers for all chunk files
         var readers = new List<StreamReader>();
         var currentLines = new List<LineData?>();
         
         try
         {
-            // Initialize readers and read first line from each
             foreach (var chunkFile in chunkFiles)
             {
                 var reader = new StreamReader(chunkFile, Encoding.UTF8, true, bufferSize);
                 readers.Add(reader);
                 
                 var firstLine = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-                currentLines.Add(firstLine != null ? LineData.FromString(firstLine, 0) : null);
+                currentLines.Add(firstLine != null ? LineData.FromString(firstLine) : null);
             }
 
-            // Merge lines from all readers
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // Find the smallest line among all readers
                 var minIndex = -1;
                 LineData? minLine = null;
 
@@ -106,24 +92,17 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
                     }
                 }
 
-                // If no more lines, we're done
                 if (minIndex == -1) break;
 
-                // Write the smallest line to output
                 await outputWriter.WriteLineAsync(minLine!.Value.Content, cancellationToken).ConfigureAwait(false);
 
-                // Read next line from the reader that provided the smallest line
                 var nextLine = await readers[minIndex].ReadLineAsync(cancellationToken).ConfigureAwait(false);
-                currentLines[minIndex] = nextLine != null ? LineData.FromString(nextLine, 0) : null;
+                currentLines[minIndex] = nextLine != null ? LineData.FromString(nextLine) : null;
             }
         }
         finally
         {
-            // Clean up readers
-            foreach (var reader in readers)
-            {
-                reader.Dispose();
-            }
+            foreach (var reader in readers) reader.Dispose();
         }
 
         return outputFile;
@@ -133,17 +112,7 @@ public class MergeManager(int bufferSize = 1024 * 1024, IComparer<LineData>? com
     {
         foreach (var file in files)
         {
-            try
-            {
-                if (File.Exists(file))
-                {
-                    File.Delete(file);
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore cleanup errors
-            }
+            if (File.Exists(file)) File.Delete(file);
         }
     }
 

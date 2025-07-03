@@ -17,7 +17,7 @@ public class FileGeneratorFactory(ILogger logger)
     public IFileGenerator CreateOptimizedGenerator(int bufferSize = 1024 * 1024, int batchSize = 1000) 
         => new OptimizedFileGenerator(logger, SampleStrings, bufferSize, batchSize);
     public IFileGenerator CreateParallelGenerator(string outputFilePath, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0) 
-        => new ParallelFileGenerator(logger, SampleStrings, outputFilePath, chunkSize, maxDegreeOfParallelism);
+        => new ParallelFileGenerator(logger, SampleStrings, chunkSize, maxDegreeOfParallelism);
     
     public IFileGenerator CreateParallelWithChunkGenerator(int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0) 
         => new ThreeDEyeFilesGenerator(logger, SampleStrings, chunkSize, maxDegreeOfParallelism);

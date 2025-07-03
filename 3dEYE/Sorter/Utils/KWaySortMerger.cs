@@ -10,7 +10,6 @@ internal class KWaySortMerger(IComparer<MergeEntry>? comparer)
 
     public async Task MergeAsync(IEnumerable<string> runPaths, string outputPath, bool tolerant = true)
     {
-        // open all run streams
         var readers = runPaths.Select(p => new StreamReader(p, Encoding.UTF8, false, 1 << 16)).ToList();
         var priorityQueue = new PriorityQueue<MergeEntry, MergeEntry>(_comparer);
 
@@ -48,7 +47,7 @@ internal class KWaySortMerger(IComparer<MergeEntry>? comparer)
             throw new FormatException($"Bad number: {line}");
         }
 
-        var keyStart = dot + 2;               // may equal line.Length → empty key
+        var keyStart = dot + 2;
         var keyLen   = line.Length - keyStart;
 
         var entry = new MergeEntry(line, keyStart, keyLen, num, runIdx);

@@ -63,40 +63,24 @@ public class StreamingSorter(
         IComparer<LineData> comparer,
         CancellationToken cancellationToken)
     {
-        // Check if input file is empty
         var fileInfo = new FileInfo(inputFilePath);
         if (fileInfo.Length == 0)
         {
-            // Create empty output file
             await File.WriteAllTextAsync(outputFilePath, "", cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        // Create temporary file for intermediate results
         var tempFile = Path.GetTempFileName();
         
         try
         {
-            // Phase 1: Stream through input and maintain sorted state in memory
             await StreamAndSortAsync(inputFilePath, tempFile, bufSize, comparer, cancellationToken).ConfigureAwait(false);
-            
-            // Phase 2: Write final sorted result to output
             await WriteFinalResultAsync(tempFile, outputFilePath, bufSize, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
-            // Clean up temporary file
-            try
-            {
-                if (File.Exists(tempFile))
-                {
-                    File.Delete(tempFile);
-                }
-            }
-            catch (Exception cleanupEx)
-            {
-                logger.LogWarning("Failed to clean up temporary file {TempFile}: {Message}", tempFile, cleanupEx.Message);
-            }
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
         }
     }
 
@@ -114,17 +98,14 @@ public class StreamingSorter(
         
         using var reader = new StreamReader(inputFilePath, Encoding.UTF8, true, bufSize);
         await using var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8, bufSize);
-        
-        var currentPosition = 0L;
-        
+
         while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
             if (line == null) break;
             
-            var lineData = LineData.FromString(line, currentPosition);
-            currentPosition = reader.BaseStream.Position;
-            
+            var lineData = LineData.FromString(line);
+
             // Add to sorted buffer
             sortedBuffer.Add(lineData);
             linesProcessed++;
@@ -159,14 +140,12 @@ public class StreamingSorter(
         StreamWriter writer,
         CancellationToken cancellationToken)
     {
-        // Write all elements in sorted order
         foreach (var lineData in buffer)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await writer.WriteLineAsync(lineData.Content, cancellationToken).ConfigureAwait(false);
         }
         
-        // Clear buffer for next batch
         buffer.Clear();
     }
 
@@ -176,8 +155,6 @@ public class StreamingSorter(
         int bufSize,
         CancellationToken cancellationToken)
     {
-        // The temp file already contains sorted data, just copy it to output
-        // This is efficient since we're just doing a file copy
         using var reader = new StreamReader(tempFilePath, Encoding.UTF8, true, bufSize);
         await using var writer = new StreamWriter(outputFilePath, false, Encoding.UTF8, bufSize);
         

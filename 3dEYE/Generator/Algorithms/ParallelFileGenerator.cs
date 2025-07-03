@@ -7,14 +7,12 @@ namespace _3dEYE.Generator.Algorithms;
 public class ParallelFileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
-    private readonly string[] _input;
     private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
     private readonly char[] _lineBuffer;
-    private readonly string _outputFilePath;
 
-    public ParallelFileGenerator(ILogger logger, string[] input, string outputFilePath, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
+    public ParallelFileGenerator(ILogger logger, string[] input, int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
     {
         if (input.Length == 0)
             throw new ArgumentException("Input strings array cannot be null or empty");
@@ -24,12 +22,10 @@ public class ParallelFileGenerator : IFileGenerator
             throw new ArgumentException("Chunk size must be greater than 0");
         
         _logger = logger;
-        _input = input;
         _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _chunkSize = chunkSize;
         _maxDegreeOfParallelism = maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
         _lineBuffer = new char[256];
-        _outputFilePath = outputFilePath;
     }
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
@@ -88,7 +84,6 @@ public class ParallelFileGenerator : IFileGenerator
 
     private async Task<string> GenerateChunkAsync(int chunkIndex, long chunkSize, long globalOffset)
     {
-        // Use the system temp directory to avoid directory existence issues
         var tempDir = Path.GetTempPath();
         var tempFilePath = Path.Combine(tempDir, $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
         long currentSize = 0;

@@ -35,13 +35,8 @@ public class ExternalMergeSorter(
         logger.LogInformation("Starting external merge sort for file: {FilePath} ({Size} bytes)", 
             inputFilePath, fileInfo.Length);
 
-        // Validate available disk space for temporary files
         ValidateDiskSpace(fileInfo.Length, _tempDirectory);
-
-        // Validate buffer size
         var bufferSize = ValidateAndAdjustBufferSize(bufferSizeBytes, fileInfo.Length);
-        
-        // Create temporary directory for chunks
         var tempDir = Path.Combine(_tempDirectory, $"sort_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
 
@@ -62,18 +57,8 @@ public class ExternalMergeSorter(
         }
         finally
         {
-            // Clean up temporary directory
-            try
-            {
-                if (Directory.Exists(tempDir))
-                {
-                    Directory.Delete(tempDir, true);
-                }
-            }
-            catch (Exception cleanupEx)
-            {
-                logger.LogWarning("Failed to clean up temporary directory {TempDir}: {Message}", tempDir, cleanupEx.Message);
-            }
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
         }
     }
 
@@ -88,14 +73,13 @@ public class ExternalMergeSorter(
         var chunkManager = new ChunkManager(bufferSize);
         var mergeManager = new MergeManager(bufferSize, comparer);
 
-        // Phase 1: Split file into sorted chunks
         logger.LogInformation("Phase 1: Splitting file into chunks with buffer size {BufferSize} bytes", bufferSize);
         
         var startTime = DateTime.UtcNow;
         var chunkFiles = await chunkManager.SplitIntoChunksAsync(
             inputFilePath, 
             tempDirectory, 
-            comparer, // Pass the comparer to ChunkManager
+            comparer,
             cancellationToken).ConfigureAwait(false);
 
         var splitTime = DateTime.UtcNow - startTime;
@@ -107,8 +91,6 @@ public class ExternalMergeSorter(
             await File.WriteAllTextAsync(outputFilePath, "", cancellationToken).ConfigureAwait(false);
             return;
         }
-
-        // Phase 2: Merge chunks into final sorted file
         logger.LogInformation("Phase 2: Merging {ChunkCount} chunks", chunkFiles.Count);
         
         var estimatedPasses = MergeManager.EstimateMergePasses(chunkFiles.Count);
@@ -118,19 +100,16 @@ public class ExternalMergeSorter(
         await mergeManager.MergeChunksAsync(chunkFiles, outputFilePath, cancellationToken).ConfigureAwait(false);
         var mergeTime = DateTime.UtcNow - mergeStartTime;
 
-        // Verify the output
         var outputInfo = new FileInfo(outputFilePath);
         var totalTime = DateTime.UtcNow - startTime;
         logger.LogInformation("Sort completed in {TotalTime:g}. Merge  time {mergeTime:g}. Output file: {OutputPath} ({Size} bytes)", 
             totalTime, mergeTime, outputFilePath, outputInfo.Length);
 
-        // Clean up chunk files
-        ChunkManager.CleanupChunks(chunkFiles, logger);
+        ChunkManager.CleanupChunks(chunkFiles);
     }
 
     private int ValidateAndAdjustBufferSize(long requestedBufferSize, long fileSize)
     {
-        // Ensure minimum buffer size
         var minBufferSize = 64 * 1024; // 64KB minimum
         var bufferSize = Math.Max((int)requestedBufferSize, minBufferSize);
 
@@ -143,11 +122,7 @@ public class ExternalMergeSorter(
             : Math.Max(fileSize / 10, minBufferSize); // 10% of file size, but at least minBufferSize
         
         bufferSize = Math.Min(bufferSize, (int)maxBufferSize);
-
-        // Round to nearest power of 2 for better performance
         bufferSize = (int)Math.Pow(2, Math.Ceiling(Math.Log2(bufferSize)));
-
-        // Final safety check: ensure buffer size is never 0
         bufferSize = Math.Max(bufferSize, minBufferSize);
 
         logger.LogDebug("Adjusted buffer size from {Requested} to {Adjusted} bytes for file size {FileSize}", 

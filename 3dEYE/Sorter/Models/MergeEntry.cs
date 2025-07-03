@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace _3dEYE.Sorter.Models;
 
-/// <summary>Queue element used during k‑way merge.</summary>
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 public readonly struct MergeEntry(string line, int keyStart, int keyLen, int number, int runIdx)
 {

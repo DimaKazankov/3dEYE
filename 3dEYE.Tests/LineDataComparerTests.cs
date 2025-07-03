@@ -12,11 +12,11 @@ public class LineDataComparerTests
     {
         var lines = new[]
         {
-            LineData.FromString("415. Apple", 0),
-            LineData.FromString("30432. Something something something", 1),
-            LineData.FromString("1. Apple", 2),
-            LineData.FromString("32. Cherry is the best", 3),
-            LineData.FromString("2. Banana is yellow", 4)
+            LineData.FromString("415. Apple"),
+            LineData.FromString("30432. Something something something"),
+            LineData.FromString("1. Apple"),
+            LineData.FromString("32. Cherry is the best"),
+            LineData.FromString("2. Banana is yellow")
         };
         Array.Sort(lines, _comparer);
         Assert.That(lines[0].AsString(), Is.EqualTo("1. Apple"));
@@ -32,9 +32,9 @@ public class LineDataComparerTests
         // Arrange
         var lines = new[]
         {
-            LineData.FromString("415. Apple", 0),
-            LineData.FromString("1. Apple", 1),
-            LineData.FromString("100. Apple", 2)
+            LineData.FromString("415. Apple"),
+            LineData.FromString("1. Apple"),
+            LineData.FromString("100. Apple")
         };
 
         // Act
@@ -52,9 +52,9 @@ public class LineDataComparerTests
         // Arrange
         var lines = new[]
         {
-            LineData.FromString("1. Zebra", 0),
-            LineData.FromString("1. Apple", 1),
-            LineData.FromString("1. Banana", 2)
+            LineData.FromString("1. Zebra"),
+            LineData.FromString("1. Apple"),
+            LineData.FromString("1. Banana")
         };
 
         // Act
@@ -72,10 +72,10 @@ public class LineDataComparerTests
         // Arrange
         var lines = new[]
         {
-            LineData.FromString("1. Apple", 0),
-            LineData.FromString("", 1),
-            LineData.FromString("2. Banana", 2),
-            LineData.FromString("   ", 3)  // whitespace only
+            LineData.FromString("1. Apple"),
+            LineData.FromString(""),
+            LineData.FromString("2. Banana"),
+            LineData.FromString("   ")  // whitespace only
         };
 
         // Act

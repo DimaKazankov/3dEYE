@@ -35,11 +35,10 @@ public class FileGeneratorsTests
             new OptimizedFileGenerator(logger, Strings, bufferSize: 4 * 1024 * 1024, batchSize: 2000),
             "Optimized FileGenerator (Large Buffer)").SetName("Optimized_FileGenerator_LargeBuffer");
         yield return new TestCaseData(
-            new ParallelFileGenerator(logger, Strings, Path.Combine(Path.GetTempPath(), "parallel_test.txt")),
+            new ParallelFileGenerator(logger, Strings),
             "Parallel FileGenerator (Default)").SetName("Parallel_FileGenerator_Default");
         yield return new TestCaseData(
-            new ParallelFileGenerator(logger, Strings, 
-                Path.Combine(Path.GetTempPath(), "parallel_test.txt"), chunkSize: 50 * 1024 * 1024, maxDegreeOfParallelism: 4),
+            new ParallelFileGenerator(logger, Strings, chunkSize: 50 * 1024 * 1024, maxDegreeOfParallelism: 4),
             "Parallel FileGenerator (Large Chunks)").SetName("Parallel_FileGenerator_LargeChunks");
         yield return new TestCaseData(
             new ThreeDEyeFilesGenerator(logger, Strings),

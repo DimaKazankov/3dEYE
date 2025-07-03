@@ -114,49 +114,37 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
 
         try
         {
-            // Generate the entire chunk in one go
             var entries = new List<LineEntry>((int)(chunkSize / 32)); // Estimate capacity
             var bufferPos = 0;
             var linesGenerated = 0;
 
             while (totalBytesGenerated < chunkSize && bufferPos < buffer.Length - maxLineChars)
             {
-                // Generate a line in the format: <Number>. <String>
                 var randomInput = _inputMemory[Random.Shared.Next(_inputMemory.Length)];
-                
-                // Calculate total line length first
                 var numberLength = WriteNumberToBuffer(buffer, bufferPos, lineNumber);
                 var totalLineLength = numberLength + 2 + randomInput.Length + 1; // ". " + "\n"
                 
-                // Check if we can fit the complete line
                 if (bufferPos + totalLineLength > buffer.Length)
                 {
                     _logger.LogDebug("GenerateChunkWithFileChunkProcessorApproachAsync: Buffer full, breaking");
                     break;
                 }
                 
-                // Check if we can fit the complete line in the target size
                 if (totalBytesGenerated + totalLineLength > chunkSize)
                 {
                     _logger.LogDebug("GenerateChunkWithFileChunkProcessorApproachAsync: Target size reached, breaking");
                     break;
                 }
 
-                // Write number (already written above)
                 bufferPos += numberLength;
-                
-                // Write ". "
                 buffer[bufferPos++] = '.';
                 buffer[bufferPos++] = ' ';
                 
-                // Write the random input string
                 randomInput.Span.CopyTo(buffer.AsSpan(bufferPos));
                 bufferPos += randomInput.Length;
                 
-                // Write newline
                 buffer[bufferPos++] = '\n';
 
-                // Create LineEntry with proper memory views - use the actual written data
                 var fullLineStart = bufferPos - totalLineLength;
                 var fullLineMemory = buffer.AsMemory(fullLineStart, totalLineLength);
                 var keyStart = fullLineStart + numberLength + 2; // +2 for ". "
@@ -172,7 +160,6 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
             _logger.LogDebug("GenerateChunkWithFileChunkProcessorApproachAsync: Generation completed - linesGenerated = {LinesGenerated}, totalBytesGenerated = {TotalBytes}", 
                 linesGenerated, totalBytesGenerated);
 
-            // Write the entire chunk to file using LineEntry
             if (entries.Count > 0)
             {
                 await entries.FlushRunAsync(chunkPath);
@@ -180,9 +167,7 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
                     chunkPath, totalBytesGenerated);
             }
             else
-            {
                 _logger.LogDebug("GenerateChunkWithFileChunkProcessorApproachAsync: No entries to write");
-            }
         }
         finally
         {
@@ -197,18 +182,14 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
 
     private static int WriteNumberToBuffer(char[] buffer, int startPos, int number)
     {
-        // Convert number to chars without string allocation
         var pos = startPos;
         var temp = number;
         
-        // Handle zero case
         if (temp == 0)
         {
             buffer[pos++] = '0';
             return 1;
         }
-        
-        // Count digits first
         var digitCount = 0;
         var temp2 = temp;
         while (temp2 > 0)
@@ -217,7 +198,6 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
             temp2 /= 10;
         }
         
-        // Write digits in reverse order
         var endPos = pos + digitCount - 1;
         while (temp > 0)
         {
@@ -231,10 +211,6 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
     private async Task MergeChunksAsync(string finalFilePath, string[] tempFilePaths)
     {
         await using var finalFileStream = new FileStream(finalFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, FileOptions.Asynchronous);
-        // Don't pre-allocate the file size - let it grow naturally
-        // finalFileStream.SetLength(totalSize);
-
-        // Simply concatenate all files in order
         foreach (var tempFilePath in tempFilePaths)
         {
             if (!File.Exists(tempFilePath)) continue;
@@ -248,20 +224,13 @@ public class ThreeDEyeFilesGenerator : IFileGenerator
 
     private void CleanupTempFilesAsync(List<string> tempFiles)
     {
-        tempFiles.ForEach(tempFile =>
+        foreach (var tempFile in tempFiles)
         {
-            try
+            if (File.Exists(tempFile))
             {
-                if (File.Exists(tempFile))
-                {
-                    File.Delete(tempFile);
-                    _logger.LogDebug("Cleaned up temp file: {TempFile}", tempFile);
-                }
+                File.Delete(tempFile);
+                _logger.LogDebug("Cleaned up temp file: {TempFile}", tempFile);
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to cleanup temp file: {TempFile}", tempFile);
-            }
-        });
+        }
     }
 } 
