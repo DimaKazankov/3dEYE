@@ -10,7 +10,6 @@ public class MergeEntryComparerTests
     [Test]
     public void Compare_ExampleInput_SortsCorrectly()
     {
-        // Arrange - Using the example from the requirements
         var entries = new[]
         {
             CreateMergeEntry("415. Apple", 415),
@@ -19,11 +18,7 @@ public class MergeEntryComparerTests
             CreateMergeEntry("32. Cherry is the best", 32),
             CreateMergeEntry("2. Banana is yellow", 2)
         };
-
-        // Act
         var sorted = entries.OrderBy(x => x, _comparer).ToArray();
-
-        // Assert - Expected output based on sorting criteria
         var expected = new[]
         {
             CreateMergeEntry("1. Apple", 1),
@@ -32,7 +27,6 @@ public class MergeEntryComparerTests
             CreateMergeEntry("32. Cherry is the best", 32),
             CreateMergeEntry("30432. Something something something", 30432)
         };
-
         Assert.That(sorted, Is.EqualTo(expected));
     }
 

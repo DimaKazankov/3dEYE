@@ -6,14 +6,14 @@ using _3dEYE.Sorter.Utils;
 
 namespace _3dEYE.Generator.Algorithms;
 
-public class ParallelFileGeneratorWithChunkProcessor : IFileGenerator
+public class ThreeDEyeFilesGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
     private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
 
-    public ParallelFileGeneratorWithChunkProcessor(ILogger logger, string[] input, 
+    public ThreeDEyeFilesGenerator(ILogger logger, string[] input, 
         int chunkSize = 100 * 1024 * 1024, int maxDegreeOfParallelism = 0)
     {
         if (input.Length == 0)

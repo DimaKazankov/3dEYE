@@ -14,7 +14,6 @@ public class UnifiedSorterTests : IDisposable
     [TestCaseSource(nameof(GetSorters))]
     public async Task SortAsync_ExampleInput_SortsCorrectly(ISorter sorter, string sorterName)
     {
-        // Arrange - Using the example from the requirements
         var inputFile = CreateTempFile(
             "415. Apple",
             "30432. Something something something",
@@ -23,11 +22,7 @@ public class UnifiedSorterTests : IDisposable
             "2. Banana is yellow"
         );
         var outputFile = GetTempFilePath();
-
-        // Act
         await sorter.SortAsync(inputFile, outputFile, new LineDataComparer());
-
-        // Assert - Expected output based on sorting criteria
         var output = await File.ReadAllLinesAsync(outputFile);
         var expected = new[]
         {

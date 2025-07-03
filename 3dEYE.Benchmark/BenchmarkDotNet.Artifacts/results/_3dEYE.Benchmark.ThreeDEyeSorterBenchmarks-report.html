@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>_3dEYE.Benchmark.ThreeDEyeSorterBenchmarks-20250703-080826</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.2, Windows 11 (10.0.26100.4351/24H2/2024Update/HudsonValley)
+Unknown processor
+.NET SDK 9.0.205
+  [Host]     : .NET 9.0.6 (9.0.625.26613), X64 RyuJIT AVX2
+  Job-EGQROE : .NET 9.0.6 (9.0.625.26613), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>Runtime=.NET 9.0  IterationCount=1  WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>Gen0  </th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Sort</td><td>1.956 m</td><td>NA</td><td>2565000.0000</td><td>31000.0000</td><td>28000.0000</td><td>14.76 GB</td>
+</tr></tbody></table>
+</body>
+</html>

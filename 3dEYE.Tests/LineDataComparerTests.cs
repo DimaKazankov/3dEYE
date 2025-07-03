@@ -10,7 +10,6 @@ public class LineDataComparerTests
     [Test]
     public void Compare_WithValidLines_SortsCorrectly()
     {
-        // Arrange
         var lines = new[]
         {
             LineData.FromString("415. Apple", 0),
@@ -19,11 +18,7 @@ public class LineDataComparerTests
             LineData.FromString("32. Cherry is the best", 3),
             LineData.FromString("2. Banana is yellow", 4)
         };
-
-        // Act
         Array.Sort(lines, _comparer);
-
-        // Assert
         Assert.That(lines[0].AsString(), Is.EqualTo("1. Apple"));
         Assert.That(lines[1].AsString(), Is.EqualTo("415. Apple"));
         Assert.That(lines[2].AsString(), Is.EqualTo("2. Banana is yellow"));
