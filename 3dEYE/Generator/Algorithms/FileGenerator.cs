@@ -7,7 +7,6 @@ namespace _3dEYE.Generator.Algorithms;
 public class FileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
-    private readonly string[] _input;
     private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly char[] _lineBuffer;
 
@@ -19,7 +18,6 @@ public class FileGenerator : IFileGenerator
             throw new ArgumentException("Input strings array contains null or empty strings");
         
         _logger = logger;
-        _input = input;
         _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _lineBuffer = new char[256];
     }

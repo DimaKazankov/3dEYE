@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>_3dEYE.Benchmark.ParallelExternalMergeSorterBenchmarks-20250703-002933</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.2, Linux Manjaro Linux
+Intel Core i7-6820HQ CPU 2.70GHz (Skylake), 1 CPU, 8 logical and 4 physical cores
+.NET SDK 9.0.105
+  [Host]     : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+  Job-EGQROE : .NET 9.0.4 (9.0.425.16305), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>Runtime=.NET 9.0  IterationCount=1  WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>BufferSizeBytes</th><th>MaxDegreeOfParallelism</th><th>Mean</th><th>Error</th><th>Gen0   </th><th>Gen1  </th><th>Gen2  </th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Sort</td><td>1048576</td><td>4</td><td>3.006 m</td><td>NA</td><td>19421000.0000</td><td>3125000.0000</td><td>2248000.0000</td><td>120.69 GB</td>
+</tr><tr><td>Sort</td><td>1048576</td><td>8</td><td>3.004 m</td><td>NA</td><td>19198000.0000</td><td>2824000.0000</td><td>1968000.0000</td><td>120.89 GB</td>
+</tr><tr><td>Sort</td><td>10485760</td><td>4</td><td>3.380 m</td><td>NA</td><td>12224000.0000</td><td>664000.0000</td><td>222000.0000</td><td>100.95 GB</td>
+</tr><tr><td>Sort</td><td>10485760</td><td>8</td><td>3.344 m</td><td>NA</td><td>12258000.0000</td><td>643000.0000</td><td>205000.0000</td><td>101.13 GB</td>
+</tr></tbody></table>
+</body>
+</html>

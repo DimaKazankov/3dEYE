@@ -7,7 +7,6 @@ namespace _3dEYE.Generator.Algorithms;
 public class ParallelFileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
-    private readonly string[] _input;
     private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly int _chunkSize;
     private readonly int _maxDegreeOfParallelism;
@@ -23,7 +22,6 @@ public class ParallelFileGenerator : IFileGenerator
             throw new ArgumentException("Chunk size must be greater than 0");
         
         _logger = logger;
-        _input = input;
         _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _chunkSize = chunkSize;
         _maxDegreeOfParallelism = maxDegreeOfParallelism > 0 ? maxDegreeOfParallelism : Environment.ProcessorCount;
@@ -86,7 +84,8 @@ public class ParallelFileGenerator : IFileGenerator
 
     private async Task<string> GenerateChunkAsync(int chunkIndex, long chunkSize, long globalOffset)
     {
-        var tempFilePath = Path.Combine(Path.GetTempPath(), $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
+        var tempDir = Path.GetTempPath();
+        var tempFilePath = Path.Combine(tempDir, $"parallel_chunk_{chunkIndex}_{Guid.NewGuid()}.txt");
         long currentSize = 0;
 
         await using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous);

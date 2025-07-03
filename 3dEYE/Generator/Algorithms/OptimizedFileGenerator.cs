@@ -7,7 +7,6 @@ namespace _3dEYE.Generator.Algorithms;
 public class OptimizedFileGenerator : IFileGenerator
 {
     private readonly ILogger _logger;
-    private readonly string[] _input;
     private readonly ReadOnlyMemory<char>[] _inputMemory;
     private readonly int _bufferSize;
     private readonly int _batchSize;
@@ -25,7 +24,6 @@ public class OptimizedFileGenerator : IFileGenerator
             throw new ArgumentException("Batch size must be greater than 0");
         
         _logger = logger;
-        _input = input;
         _inputMemory = FileGeneratorHelpers.ConvertToReadOnlyMemoryArray(input);
         _bufferSize = bufferSize;
         _batchSize = batchSize;

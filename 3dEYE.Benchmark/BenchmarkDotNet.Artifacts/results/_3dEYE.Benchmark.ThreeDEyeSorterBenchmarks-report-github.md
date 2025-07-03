@@ -9,6 +9,6 @@ Unknown processor
 Runtime=.NET 9.0  IterationCount=1  WarmupCount=1  
 
 ```
-| Method                   | Mean    | Error | Gen0      | Gen1      | Gen2      | Allocated |
-|------------------------- |--------:|------:|----------:|----------:|----------:|----------:|
-| Parallel_Generate1GBFile | 35.26 s |    NA | 1000.0000 | 1000.0000 | 1000.0000 |  14.33 GB |
+| Method | Mean    | Error | Gen0         | Gen1       | Gen2       | Allocated |
+|------- |--------:|------:|-------------:|-----------:|-----------:|----------:|
+| Sort   | 1.956 m |    NA | 2565000.0000 | 31000.0000 | 28000.0000 |  14.76 GB |
